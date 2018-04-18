@@ -84,7 +84,6 @@ public class Master {
 		
 		return FSReturnVals.Fail;
 		
-		
 	}
 	
 	public static boolean deleteDirectory(File dir) {
@@ -113,7 +112,26 @@ public class Master {
 	 * "/Shahram/CSCI485" to "/Shahram/CSCI550"
 	 */
 	public FSReturnVals RenameDir(String src, String NewName) {
-		return null;
+		//Check if srcDir exists
+		File srcDir = new File(src);
+		if (!srcDir.isDirectory()) {
+			return FSReturnVals.SrcDirNotExistent;
+		}
+		//Check if newDir already exists
+		File newDir = new File(NewName);
+		if (newDir.isDirectory()) {
+			System.out.println("newDir already exists");
+			return FSReturnVals.DestDirExists;
+		}
+		//Rename and check status
+		boolean renameSuccess = srcDir.renameTo(newDir);
+		if(renameSuccess) {
+			System.out.println("directory rename successful");
+		    return FSReturnVals.Success;
+		}
+		
+		System.out.println("directory rename failed");
+	    return FSReturnVals.Fail;
 	}
 
 	/**
