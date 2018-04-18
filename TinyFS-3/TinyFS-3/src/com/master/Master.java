@@ -1,6 +1,10 @@
 package com.master;
 
 import com.client.FileHandle;
+
+import java.io.File;
+import java.nio.file.Files;
+
 import com.client.ClientFS.FSReturnVals;
 
 public class Master {
@@ -29,7 +33,25 @@ public class Master {
 	 * "CSCI485"), CreateDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals CreateDir(String src, String dirname) {
-		return null;
+		//Check src directory exists
+		File srcDir = new File(src);
+		if (!srcDir.isDirectory()) {
+			return FSReturnVals.SrcDirNotExistent;
+		}
+		
+		File dir = new File(src+dirname);
+	    
+	    // attempt to create the directory here
+	    boolean successful = dir.mkdir();
+	    if (successful)
+	    {
+	      // creating the directory succeeded
+	      System.out.println("directory creation successful");
+	      return FSReturnVals.Success;
+	    }
+		
+	    System.out.println("Dir already exists");
+		return FSReturnVals.DestDirExists;
 	}
 
 	/**
@@ -40,7 +62,46 @@ public class Master {
 	 * Example usage: DeleteDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals DeleteDir(String src, String dirname) {
-		return null;
+		//Check src directory exists
+		File srcDir = new File(src);
+		if (!srcDir.isDirectory()) {
+			return FSReturnVals.SrcDirNotExistent;
+		}
+		
+		//Check dirname directory exists
+		File dirnameDir = new File(src+dirname);
+		if (!dirnameDir.isDirectory()) {
+			System.out.println("dirname directory does not exist");
+			return FSReturnVals.Fail;
+		}
+		
+		boolean deleteDirSuccess = deleteDirectory(srcDir);
+		
+		if(deleteDirSuccess) {
+			System.out.println("directory deletion successful");
+		    return FSReturnVals.DestDirExists;
+		}
+		
+		return FSReturnVals.Fail;
+		
+		
+	}
+	
+	public static boolean deleteDirectory(File dir) {
+	    if(dir.exists()){
+	        File[] files = dir.listFiles();
+	        if(null!=files){
+	            for(int i=0; i<files.length; i++) {
+	                if(files[i].isDirectory()) {
+	                    deleteDirectory(files[i]);
+	                }
+	                else {
+	                    files[i].delete();
+	                }
+	            }
+	        }
+	    }
+	    return(dir.delete());
 	}
 
 	/**
