@@ -187,7 +187,7 @@ public class Master {
 	}
 	
 	public void getContent(ArrayList<String> list, String dir) {
-		System.out.println("--getContent: "+dir);
+//		System.out.println("--getContent: "+dir);
 		list.add(dir);
 		if(!fileNSMap.containsKey(dir)) {
 			return;
@@ -206,7 +206,26 @@ public class Master {
 	 * Example usage: Createfile("/Shahram/CSCI485/Lecture1/", "Intro.pptx")
 	 */
 	public FSReturnVals CreateFile(String tgtdir, String filename) {
-		return null;
+		if(tgtdir.length()>2) {
+			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
+		}
+		
+		//Check tgtdir directory exists
+		if(!fileNSMap.containsKey(tgtdir)) {
+			System.out.println("CreateFile: tgtdir does not exist");
+			return FSReturnVals.SrcDirNotExistent;
+		}
+		
+		ArrayList<String> dirContent = fileNSMap.get(tgtdir);
+		String fileFullName = tgtdir + "/" + filename;
+		if(dirContent.contains(fileFullName)) {
+			System.out.println("CreateFile: file exists");
+			return FSReturnVals.FileExists;
+		}
+		
+		dirContent.add(fileFullName);
+		fileNSMap.put(tgtdir, dirContent);
+		return FSReturnVals.Success;
 	}
 
 	/**
@@ -217,7 +236,26 @@ public class Master {
 	 * Example usage: DeleteFile("/Shahram/CSCI485/Lecture1/", "Intro.pptx")
 	 */
 	public FSReturnVals DeleteFile(String tgtdir, String filename) {
-		return null;
+		if(tgtdir.length()>2) {
+			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
+		}
+		
+		//Check tgtdir directory exists
+		if(!fileNSMap.containsKey(tgtdir)) {
+			System.out.println("DeleteFile: tgtdir does not exist");
+			return FSReturnVals.SrcDirNotExistent;
+		}
+		
+		ArrayList<String> dirContent = fileNSMap.get(tgtdir);
+		String fileFullName = tgtdir + "/" + filename;
+		if(!dirContent.contains(fileFullName)) {
+			System.out.println("DeleteFile: file does not exist");
+			return FSReturnVals.FileDoesNotExist;
+		}
+		
+		dirContent.remove(fileFullName);
+		fileNSMap.put(tgtdir, dirContent);
+		return FSReturnVals.Success;
 	}
 
 	/**
