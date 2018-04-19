@@ -51,6 +51,7 @@ public class Master {
 		//Store in parent dir as full path + dirname
 		ArrayList<String> srcDir = fileNSMap.get(src);
 		srcDir.add(fullPath);
+		fileNSMap.put(src, srcDir);
 		fileNSMap.put(fullPath, new ArrayList<String>());
 		System.out.println("CreateDir: directory creation successful");
 	    return FSReturnVals.Success;
@@ -78,6 +79,7 @@ public class Master {
 		if(fileNSMap.containsKey(fullPath)) {
 			ArrayList<String> parentContent = fileNSMap.get(src);
 			parentContent.remove(fullPath);
+			fileNSMap.put(src, parentContent);
 			fileNSMap.remove(fullPath);
 			System.out.println("directory deletion successful");
 		    return FSReturnVals.DestDirExists;
@@ -136,6 +138,7 @@ public class Master {
 		}
 		parentContent.remove(src);
 		parentContent.add(NewName);
+		fileNSMap.put(parentDir, parentContent);
 		//Rename by removing and adding back new name
 		ArrayList<String> srcDirContent = fileNSMap.remove(src);
 		fileNSMap.put(NewName, srcDirContent);
@@ -150,7 +153,6 @@ public class Master {
 	 * Example usage: ListDir("/Shahram/CSCI485")
 	 */
 	public String[] ListDir(String tgt) {
-		System.out.println("tgt is " + tgt);
 		//Check src directory exists
 		if(!fileNSMap.containsKey(tgt)) {
 			System.out.println("no tgt in fileNSMap");
@@ -162,11 +164,29 @@ public class Master {
 			System.out.println("tgt dir is empty");
 			return null;
 		}
+		
+		ArrayList<String> listedList = new ArrayList<String>();
+		for(int i=0;i<tgtList.size();i++) {
+			getContent(listedList, tgtList.get(i));
+		}
+		
 //		String[] tgtArray = (String[])tgtList.toArray();
-		Object[] objectList = tgtList.toArray();
+		Object[] objectList = listedList.toArray();
 		String[] tgtArray =  Arrays.copyOf(objectList,objectList.length,String[].class);
 		
 		return tgtArray;
+	}
+	
+	public void getContent(ArrayList<String> list, String dir) {
+		System.out.println("--getContent: "+dir);
+		list.add(dir);
+		if(!fileNSMap.containsKey(dir)) {
+			return;
+		}
+		ArrayList<String> contentList = fileNSMap.get(dir);
+		for(int i=0;i<contentList.size();i++) {
+			getContent(list, contentList.get(i));
+		}
 	}
 
 	/**

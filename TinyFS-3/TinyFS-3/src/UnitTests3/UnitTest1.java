@@ -76,6 +76,16 @@ public class UnitTest1 {
 	}
 	
 	public static boolean compareArrays(String[] arr1, String[] arr2) {
+		System.out.println("arr1:");
+		for(int i=0;i<arr1.length;i++) {
+			System.out.print(arr1[i]+" ");
+		}
+		System.out.println();
+		System.out.println("arr2:");
+		for(int i=0;i<arr2.length;i++) {
+			System.out.print(arr2[i]+" ");
+		}
+		System.out.println();
 	    HashSet<String> set1 = new HashSet<String>(Arrays.asList(arr1));
 	    HashSet<String> set2 = new HashSet<String>(Arrays.asList(arr2));
 	    return set1.equals(set2);
