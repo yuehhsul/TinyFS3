@@ -142,7 +142,17 @@ public class Master {
 	 * Example usage: ListDir("/Shahram/CSCI485")
 	 */
 	public String[] ListDir(String tgt) {
-		return null;
+		File tgtDir = new File(tgt);
+		if (!tgtDir.isDirectory()) {
+			return null;
+		}
+		
+		String[] tgtList = tgtDir.list();
+		
+		//return null if directory is empty
+		if(tgtList.length==0) return null;
+		
+		return tgtList;
 	}
 
 	/**
