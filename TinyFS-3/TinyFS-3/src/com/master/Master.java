@@ -47,8 +47,9 @@ public class Master {
 			return FSReturnVals.DestDirExists;
 		}
 		
+		//Store in parent dir as full path + dirname
 		ArrayList<String> srcDir = fileNSMap.get(src);
-		srcDir.add(dirname);
+		srcDir.add(src+dirname);
 		fileNSMap.put(src+dirname, null);
 		System.out.println("CreateDir: directory creation successful");
 	    return FSReturnVals.Success;
@@ -69,6 +70,8 @@ public class Master {
 		
 		//Check dirname directory exists, if yes, delete
 		if(fileNSMap.containsKey(src+dirname)) {
+			ArrayList<String> parentContent = fileNSMap.get(src);
+			parentContent.remove(src);
 			fileNSMap.remove(src+dirname);
 			System.out.println("directory deletion successful");
 		    return FSReturnVals.DestDirExists;
@@ -105,26 +108,30 @@ public class Master {
 	 * "/Shahram/CSCI485" to "/Shahram/CSCI550"
 	 */
 	public FSReturnVals RenameDir(String src, String NewName) {
-		//Check if srcDir exists
-		File srcDir = new File(src);
-		if (!srcDir.isDirectory()) {
+		//Check src directory exists
+		if(!fileNSMap.containsKey(src)) {
 			return FSReturnVals.SrcDirNotExistent;
 		}
 		//Check if newDir already exists
-		File newDir = new File(NewName);
-		if (newDir.isDirectory()) {
-			System.out.println("newDir already exists");
+		if(fileNSMap.containsKey(NewName)) {
 			return FSReturnVals.DestDirExists;
 		}
-		//Rename and check status
-		boolean renameSuccess = srcDir.renameTo(newDir);
-		if(renameSuccess) {
-			System.out.println("directory rename successful");
-		    return FSReturnVals.Success;
-		}
 		
-		System.out.println("directory rename failed");
-	    return FSReturnVals.Fail;
+		//Find parent directory and modify content
+		//-2 because src is in ../../../ format, so -2 removes the last "/" and lastIndexOf would
+		//return the second to last
+		String parentDir = src.substring(0, src.substring(0, src.length()-2).lastIndexOf("/"));
+		if(!fileNSMap.containsKey(parentDir)) {
+			System.out.println("Rename: parent directory does not exist");
+			return FSReturnVals.Fail;
+		}
+		ArrayList<String> parentContent = fileNSMap.get(parentDir);
+		parentContent.remove(src);
+		parentContent.add(NewName);
+		//Rename by removing and adding back new name
+		ArrayList<String> srcDirContent = fileNSMap.remove(src);
+		fileNSMap.put(NewName, srcDirContent);
+		return FSReturnVals.Success;
 	}
 
 	/**
