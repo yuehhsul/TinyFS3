@@ -126,6 +126,10 @@ public class Master {
 			return FSReturnVals.Fail;
 		}
 		ArrayList<String> parentContent = fileNSMap.get(parentDir);
+		if(parentContent==null) {
+			System.out.println("Rename: parent directory empty");
+			return FSReturnVals.Fail;
+		}
 		parentContent.remove(src);
 		parentContent.add(NewName);
 		//Rename by removing and adding back new name
@@ -142,17 +146,16 @@ public class Master {
 	 * Example usage: ListDir("/Shahram/CSCI485")
 	 */
 	public String[] ListDir(String tgt) {
-		File tgtDir = new File(tgt);
-		if (!tgtDir.isDirectory()) {
+		//Check src directory exists
+		if(!fileNSMap.containsKey(tgt)) {
 			return null;
 		}
 		
-		String[] tgtList = tgtDir.list();
+		ArrayList<String> tgtList = fileNSMap.get(tgt);
+		if(tgtList==null) return null;
+		String[] tgtArray = (String[])tgtList.toArray();
 		
-		//return null if directory is empty
-		if(tgtList.length==0) return null;
-		
-		return tgtList;
+		return tgtArray;
 	}
 
 	/**
