@@ -4,10 +4,14 @@ import com.client.FileHandle;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Map;
 
 import com.client.ClientFS.FSReturnVals;
 
 public class Master {
+	private static Map<String, ArrayList<String>>fileNSMap;
+	
 	public enum FSReturnVals {
 		DirExists, // Returned by CreateDir when directory exists
 		DirNotEmpty, //Returned when a non-empty directory is deleted
@@ -34,24 +38,20 @@ public class Master {
 	 */
 	public FSReturnVals CreateDir(String src, String dirname) {
 		//Check src directory exists
-		File srcDir = new File(src);
-		if (!srcDir.isDirectory()) {
+		if(!fileNSMap.containsKey(src)) {
 			return FSReturnVals.SrcDirNotExistent;
 		}
 		
-		File dir = new File(src+dirname);
-	    
-	    // attempt to create the directory here
-	    boolean successful = dir.mkdir();
-	    if (successful)
-	    {
-	      // creating the directory succeeded
-	      System.out.println("directory creation successful");
-	      return FSReturnVals.Success;
-	    }
+		if(fileNSMap.containsKey(src+dirname)) {
+			System.out.println("CreateDir: directory already exists");
+			return FSReturnVals.DestDirExists;
+		}
 		
-	    System.out.println("Dir already exists");
-		return FSReturnVals.DestDirExists;
+		ArrayList<String> srcDir = fileNSMap.get(src);
+		srcDir.add(dirname);
+		fileNSMap.put(src+dirname, null);
+		System.out.println("CreateDir: directory creation successful");
+	    return FSReturnVals.Success;
 	}
 
 	/**
@@ -63,25 +63,18 @@ public class Master {
 	 */
 	public FSReturnVals DeleteDir(String src, String dirname) {
 		//Check src directory exists
-		File srcDir = new File(src);
-		if (!srcDir.isDirectory()) {
+		if(!fileNSMap.containsKey(src)) {
 			return FSReturnVals.SrcDirNotExistent;
 		}
 		
-		//Check dirname directory exists
-		File dirnameDir = new File(src+dirname);
-		if (!dirnameDir.isDirectory()) {
-			System.out.println("dirname directory does not exist");
-			return FSReturnVals.Fail;
-		}
-		
-		boolean deleteDirSuccess = deleteDirectory(srcDir);
-		
-		if(deleteDirSuccess) {
+		//Check dirname directory exists, if yes, delete
+		if(fileNSMap.containsKey(src+dirname)) {
+			fileNSMap.remove(src+dirname);
 			System.out.println("directory deletion successful");
 		    return FSReturnVals.DestDirExists;
 		}
 		
+		System.out.println("dirname directory does not exist");
 		return FSReturnVals.Fail;
 		
 	}
@@ -195,6 +188,12 @@ public class Master {
 	 */
 	public FSReturnVals CloseFile(FileHandle ofh) {
 		return null;
+	}
+	
+	public static void main(String args[])
+	{
+		//Create the hashmap (populate it)
+		//Accept client connections
 	}
 
 
