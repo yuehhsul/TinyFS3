@@ -5,6 +5,8 @@ import com.client.FileHandle;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.client.ClientFS.FSReturnVals;
@@ -12,20 +14,9 @@ import com.client.ClientFS.FSReturnVals;
 public class Master {
 	private static Map<String, ArrayList<String>>fileNSMap;
 	
-	public enum FSReturnVals {
-		DirExists, // Returned by CreateDir when directory exists
-		DirNotEmpty, //Returned when a non-empty directory is deleted
-		SrcDirNotExistent, // Returned when source directory does not exist
-		DestDirExists, // Returned when a destination directory exists
-		FileExists, // Returned when a file exists
-		FileDoesNotExist, // Returns when a file does not exist
-		BadHandle, // Returned when the handle for an open file is not valid
-		RecordTooLong, // Returned when a record size is larger than chunk size
-		BadRecID, // The specified RID is not valid, used by DeleteRecord
-		RecDoesNotExist, // The specified record does not exist, used by DeleteRecord
-		NotImplemented, // Specific to CSCI 485 and its unit tests
-		Success, //Returned when a method succeeds
-		Fail //Returned when a method fails
+	public Master() {
+		fileNSMap = new HashMap<String, ArrayList<String>>();
+		fileNSMap.put("/", new ArrayList<String>());
 	}
 
 	/**
@@ -37,20 +28,30 @@ public class Master {
 	 * "CSCI485"), CreateDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals CreateDir(String src, String dirname) {
+		String fullPath = src+dirname;
+		if(src.length()>2) {
+			src = src.substring(0, src.length()-1);
+		}
+		System.out.println("Substr src = " + src);
+		
+		if(fileNSMap==null) {
+			System.out.println("File Name Space Map is null");
+		}
+		
 		//Check src directory exists
 		if(!fileNSMap.containsKey(src)) {
 			return FSReturnVals.SrcDirNotExistent;
 		}
 		
-		if(fileNSMap.containsKey(src+dirname)) {
+		if(fileNSMap.containsKey(fullPath)) {
 			System.out.println("CreateDir: directory already exists");
 			return FSReturnVals.DestDirExists;
 		}
 		
 		//Store in parent dir as full path + dirname
 		ArrayList<String> srcDir = fileNSMap.get(src);
-		srcDir.add(src+dirname);
-		fileNSMap.put(src+dirname, null);
+		srcDir.add(fullPath);
+		fileNSMap.put(fullPath, new ArrayList<String>());
 		System.out.println("CreateDir: directory creation successful");
 	    return FSReturnVals.Success;
 	}
@@ -63,16 +64,21 @@ public class Master {
 	 * Example usage: DeleteDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals DeleteDir(String src, String dirname) {
+		String fullPath = src+dirname;
+		if(src.length()>2) {
+			src = src.substring(0, src.length()-1);
+		}
+		
 		//Check src directory exists
 		if(!fileNSMap.containsKey(src)) {
 			return FSReturnVals.SrcDirNotExistent;
 		}
 		
 		//Check dirname directory exists, if yes, delete
-		if(fileNSMap.containsKey(src+dirname)) {
+		if(fileNSMap.containsKey(fullPath)) {
 			ArrayList<String> parentContent = fileNSMap.get(src);
-			parentContent.remove(src);
-			fileNSMap.remove(src+dirname);
+			parentContent.remove(fullPath);
+			fileNSMap.remove(fullPath);
 			System.out.println("directory deletion successful");
 		    return FSReturnVals.DestDirExists;
 		}
@@ -118,9 +124,7 @@ public class Master {
 		}
 		
 		//Find parent directory and modify content
-		//-2 because src is in ../../../ format, so -2 removes the last "/" and lastIndexOf would
-		//return the second to last
-		String parentDir = src.substring(0, src.substring(0, src.length()-2).lastIndexOf("/"));
+		String parentDir = src.substring(0, src.lastIndexOf("/"));
 		if(!fileNSMap.containsKey(parentDir)) {
 			System.out.println("Rename: parent directory does not exist");
 			return FSReturnVals.Fail;
@@ -146,14 +150,21 @@ public class Master {
 	 * Example usage: ListDir("/Shahram/CSCI485")
 	 */
 	public String[] ListDir(String tgt) {
+		System.out.println("tgt is " + tgt);
 		//Check src directory exists
 		if(!fileNSMap.containsKey(tgt)) {
+			System.out.println("no tgt in fileNSMap");
 			return null;
 		}
 		
 		ArrayList<String> tgtList = fileNSMap.get(tgt);
-		if(tgtList==null) return null;
-		String[] tgtArray = (String[])tgtList.toArray();
+		if(tgtList==null) {
+			System.out.println("tgt dir is empty");
+			return null;
+		}
+//		String[] tgtArray = (String[])tgtList.toArray();
+		Object[] objectList = tgtList.toArray();
+		String[] tgtArray =  Arrays.copyOf(objectList,objectList.length,String[].class);
 		
 		return tgtArray;
 	}
@@ -204,6 +215,7 @@ public class Master {
 	{
 		//Create the hashmap (populate it)
 		//Accept client connections
+		Master master = new Master();
 	}
 
 

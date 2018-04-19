@@ -1,7 +1,11 @@
 package com.client;
 
+import com.master.Master;
+
 public class ClientFS {
 
+	private Master master = new Master();
+	
 	public enum FSReturnVals {
 		DirExists, // Returned by CreateDir when directory exists
 		DirNotEmpty, //Returned when a non-empty directory is deleted
@@ -27,7 +31,7 @@ public class ClientFS {
 	 * "CSCI485"), CreateDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals CreateDir(String src, String dirname) {
-		return null;
+		return master.CreateDir(src, dirname);
 	}
 
 	/**
@@ -38,7 +42,7 @@ public class ClientFS {
 	 * Example usage: DeleteDir("/Shahram/CSCI485/", "Lecture1")
 	 */
 	public FSReturnVals DeleteDir(String src, String dirname) {
-		return null;
+		return master.DeleteDir(src, dirname);
 	}
 
 	/**
@@ -50,7 +54,7 @@ public class ClientFS {
 	 * "/Shahram/CSCI485" to "/Shahram/CSCI550"
 	 */
 	public FSReturnVals RenameDir(String src, String NewName) {
-		return null;
+		return master.RenameDir(src, NewName);
 	}
 
 	/**
@@ -61,7 +65,7 @@ public class ClientFS {
 	 * Example usage: ListDir("/Shahram/CSCI485")
 	 */
 	public String[] ListDir(String tgt) {
-		return null;
+		return master.ListDir(tgt);
 	}
 
 	/**
