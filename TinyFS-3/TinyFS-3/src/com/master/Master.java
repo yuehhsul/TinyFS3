@@ -77,6 +77,11 @@ public class Master {
 		
 		//Check dirname directory exists, if yes, delete
 		if(fileNSMap.containsKey(fullPath)) {
+			
+			if(fileNSMap.get(fullPath).size()>0) {
+				return FSReturnVals.DirNotEmpty;
+			}
+			
 			ArrayList<String> parentContent = fileNSMap.get(src);
 			parentContent.remove(fullPath);
 			fileNSMap.put(src, parentContent);
@@ -126,9 +131,13 @@ public class Master {
 		}
 		
 		//Find parent directory and modify content
-		String parentDir = src.substring(0, src.lastIndexOf("/"));
+		String parentDir = src;
+		int occurrences = src.length() - src.replace("/", "").length();
+		if(occurrences>1) {
+			parentDir = src.substring(0, src.lastIndexOf("/"));
+		}
 		if(!fileNSMap.containsKey(parentDir)) {
-			System.out.println("Rename: parent directory does not exist");
+			System.out.println("Rename: parent directory does not exist: "+parentDir);
 			return FSReturnVals.Fail;
 		}
 		ArrayList<String> parentContent = fileNSMap.get(parentDir);
