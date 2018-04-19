@@ -13,10 +13,14 @@ import com.client.ClientFS.FSReturnVals;
 
 public class Master {
 	private static Map<String, ArrayList<String>>fileNSMap;
+	private static Map<String, ArrayList<String>>fileHandleMap;
+	private static Map<String, String> chunkAddrMap;
 	
 	public Master() {
 		fileNSMap = new HashMap<String, ArrayList<String>>();
 		fileNSMap.put("/", new ArrayList<String>());
+		fileHandleMap = new HashMap<String, ArrayList<String>>();
+		chunkAddrMap = new HashMap<String, String>();
 	}
 
 	/**
@@ -222,9 +226,11 @@ public class Master {
 			System.out.println("CreateFile: file exists");
 			return FSReturnVals.FileExists;
 		}
-		
+		//Add file to ns
 		dirContent.add(fileFullName);
 		fileNSMap.put(tgtdir, dirContent);
+		//Add file to fileHandleMap
+		fileHandleMap.put(fileFullName, new ArrayList<String>());
 		return FSReturnVals.Success;
 	}
 
@@ -252,9 +258,11 @@ public class Master {
 			System.out.println("DeleteFile: file does not exist");
 			return FSReturnVals.FileDoesNotExist;
 		}
-		
+		//Remove from ns
 		dirContent.remove(fileFullName);
 		fileNSMap.put(tgtdir, dirContent);
+		//Remove from fileHandleMap
+		fileHandleMap.remove(fileFullName);
 		return FSReturnVals.Success;
 	}
 
@@ -266,7 +274,19 @@ public class Master {
 	 * Example usage: OpenFile("/Shahram/CSCI485/Lecture1/Intro.pptx", FH1)
 	 */
 	public FSReturnVals OpenFile(String FilePath, FileHandle ofh) {
-		return null;
+		if(!fileHandleMap.containsKey(FilePath)) {
+			return FSReturnVals.FileDoesNotExist;
+		}
+		ArrayList<String> chunkList = fileHandleMap.get(FilePath);
+		Map<String, String> fileChunkAddrMap = new HashMap<String, String>();
+		for(int i=0;i<chunkList.size();i++) {
+			String chunkHandle = chunkList.get(i);
+			String chunkAddr = chunkAddrMap.get(chunkHandle);
+			fileChunkAddrMap.put(chunkHandle, chunkAddr);
+		}
+		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList);
+		ofh = fh;
+		return FSReturnVals.Success;
 	}
 
 	/**

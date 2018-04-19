@@ -7,6 +7,13 @@ public class FileHandle {
 	private Map<String, String> chunkAddrMap;
 	private ArrayList<String> chunkList;
 	
+	public FileHandle() {}
+	
+	public FileHandle(Map<String, String> map, ArrayList<String> list) {
+		chunkAddrMap = map;
+		chunkList = list;
+	}
+	
 	public ArrayList<String> getChunkList() {
 		return chunkList;
 	}
