@@ -42,6 +42,7 @@ public class ClientRec {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
+		
 		return null;
 	}
 
@@ -52,6 +53,7 @@ public class ClientRec {
 	 * Example usage: ReadFirstRecord(FH1, tinyRec)
 	 */
 	public FSReturnVals ReadFirstRecord(FileHandle ofh, TinyRec rec){
+		
 		return null;
 	}
 
