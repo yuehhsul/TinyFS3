@@ -29,6 +29,9 @@ public class ChunkServer implements ChunkServerInterface {
 	//Used for the file system
 	public static long counter;
 	
+	//Chunkserver ID
+	public int csid;
+	
 	public static int PayloadSZ = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer
 	public static int CMDlength = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer  
 	
@@ -44,9 +47,10 @@ public class ChunkServer implements ChunkServerInterface {
 	/**
 	 * Initialize the chunk server
 	 */
-	public ChunkServer(){
+	public ChunkServer(int id){
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles();
+		csid = id;
 
 		if(fs.length == 0){
 			counter = 0;
@@ -66,7 +70,8 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String createChunk() {
 		counter++;
-		return String.valueOf(counter);
+		String chunkHandle = csid + String.valueOf(counter);
+		return chunkHandle;
 	}
 	
 	/**
