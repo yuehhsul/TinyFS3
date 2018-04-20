@@ -1,6 +1,7 @@
 package com.client;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import com.client.ClientFS.FSReturnVals;
 
@@ -15,6 +16,10 @@ public class ClientRec {
 	 * Example usage: AppendRecord(FH1, obama, RecID1)
 	 */
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
+		if(RecordID == null)
+			return null;
+		ArrayList<String> chunkList = ofh.getChunkList();
+		String lastChunk = chunkList.get(chunkList.size() -1);
 		return null;
 	}
 

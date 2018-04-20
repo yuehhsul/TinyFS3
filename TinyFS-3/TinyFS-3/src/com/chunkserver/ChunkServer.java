@@ -135,8 +135,6 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public static void ReadAndProcessRequests()
 	{
-		ChunkServer cs = new ChunkServer();
-		
 		//Used for communication with the Client via the network
 		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
 		ServerSocket commChanel = null;
