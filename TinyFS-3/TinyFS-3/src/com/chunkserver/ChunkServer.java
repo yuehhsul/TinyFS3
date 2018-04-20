@@ -94,8 +94,19 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 	}
 	
-	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
-		return null;
+	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
+		
+		byte[] slotNum = readChunk(chunkHandle, 4, 4); // gets the # of slots in chunk
+		int slot = ByteBuffer.wrap(slotNum).getInt();
+		RecordID.setSlotNumber(slot); //this will be the offset that we want to write to the file
+		
+		int offset = ChunkSize-(slot+1)*4-1;
+		Boolean pass = writeChunk(chunkHandle, payload, offset);
+		if(pass) {
+			return FSReturnVals.Success;
+		}
+		
+		return FSReturnVals.Fail;
 	}
 
 	/**
@@ -106,7 +117,15 @@ public class ChunkServer implements ChunkServerInterface {
 	 *
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
-	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
+	public FSReturnVals DeleteRecord(String chunkHandle, RID RecordID) {
+		int offset = ChunkSize-(RecordID.getSlotNumber()+1)*4-1; // to get offset #
+		
+		byte[] loc = readChunk(chunkHandle, offset, 4);
+		int index = ByteBuffer.wrap(loc).getInt();
+		
+		
+		
+		//int loc = 
 		return null;
 	}
 
