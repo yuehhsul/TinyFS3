@@ -19,7 +19,7 @@ public class ClientRec {
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
 		if(ofh == null || ofh.getChunkList() == null)
 			return ClientFS.FSReturnVals.BadHandle;
-		if (!RecordID.isEmpty() || RecordID == null)
+		if (!RecordID.isEmpty() || RecordID == null)	//TODO: ask if there is a mistake in the comment
 			return ClientFS.FSReturnVals.BadRecID;
 		if(payload.length > ChunkServer.ChunkSize)
 			return ClientFS.FSReturnVals.RecordTooLong;
