@@ -14,6 +14,9 @@ import java.util.Arrays;
 //import java.util.Arrays;
 
 import com.client.Client;
+import com.client.FileHandle;
+import com.client.RID;
+import com.client.ClientFS.FSReturnVals;
 import com.interfaces.ChunkServerInterface;
 
 /**
@@ -47,10 +50,9 @@ public class ChunkServer implements ChunkServerInterface {
 	/**
 	 * Initialize the chunk server
 	 */
-	public ChunkServer(int id){
+	public ChunkServer(){
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles();
-		csid = id;
 
 		if(fs.length == 0){
 			counter = 0;
@@ -70,8 +72,8 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String createChunk() {
 		counter++;
-		String chunkHandle = csid + String.valueOf(counter);
-		return chunkHandle;
+//		String chunkHandle = csid + String.valueOf(counter);
+		return String.valueOf(counter);
 	}
 	
 	/**
@@ -91,6 +93,23 @@ public class ChunkServer implements ChunkServerInterface {
 			return false;
 		}
 	}
+	
+	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
+		return null;
+	}
+
+	/**
+	 * Deletes the specified record by RecordID from the open file specified by
+	 * ofh Returns BadHandle if ofh is invalid Returns BadRecID if the specified
+	 * RID is not valid Returns RecDoesNotExist if the record specified by
+	 * RecordID does not exist.
+	 *
+	 * Example usage: DeleteRecord(FH1, RecID1)
+	 */
+	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
+		return null;
+	}
+
 	
 	/**
 	 * read the chunk at the specific offset
@@ -121,7 +140,7 @@ public class ChunkServer implements ChunkServerInterface {
 		//Used for communication with the Client via the network
 		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
 		ServerSocket commChanel = null;
-		ObjectOutputStream WriteOutput = null;
+		ObjectOutputStream WriteOutput = null;z
 		ObjectInputStream ReadInput = null;
 		
 		try {
