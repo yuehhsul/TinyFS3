@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.chunkserver.ChunkServer;
 import com.client.ClientFS.FSReturnVals;
 
 public class Master {

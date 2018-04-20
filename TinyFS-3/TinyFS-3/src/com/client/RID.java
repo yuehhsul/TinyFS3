@@ -5,6 +5,7 @@ public class RID {
 	private int slotNumber; //this is the offset of records from the end, not the number of byte
 				//an offset of 1 means it is the second to last record and i must go from the end of the 
 				//chunk handle the chunklength - offset * 4
+	private int recordLength;
 	public RID() {
 		slotNumber = -1;
 	}
@@ -18,7 +19,11 @@ public class RID {
 		this.chunkHandle = chunkHandle;
 	}
 	
-	public void setOffset(int slotNumber) {
+	public String getChunkHandle() {
+		return this.chunkHandle;
+	}
+	
+	public void setSlotNumber(int slotNumber) {
 		this.slotNumber = slotNumber;
 	}
 	
@@ -26,8 +31,12 @@ public class RID {
 		return this.slotNumber;
 	}
 	
-	public String getChunkHandle() {
-		return this.chunkHandle;
+	public void setRecordLength(int length) {
+		this.recordLength = length;
+	}
+	
+	public int getRecordLength() {
+		return this.recordLength;
 	}
 	
 	public boolean isEmpty() {

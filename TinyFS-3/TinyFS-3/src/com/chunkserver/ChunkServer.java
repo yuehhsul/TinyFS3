@@ -94,18 +94,23 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 	}
 	
+	/**
+	 * Appends a record to the open file as specified by ofh Returns BadHandle
+	 * if ofh is invalid Returns BadRecID if the specified RID is not null
+	 * Returns RecordTooLong if the size of payload exceeds chunksize RID is
+	 * null if AppendRecord fails
+	 *
+	 * Example usage: AppendRecord(FH1, obama, RecID1)
+	 */
 	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
-		
-		byte[] slotNum = readChunk(chunkHandle, 4, 4); // gets the # of slots in chunk
-		int slot = ByteBuffer.wrap(slotNum).getInt();
+		int slot = getNumOfSlots(chunkHandle);
 		RecordID.setSlotNumber(slot); //this will be the offset that we want to write to the file
 		
-		int offset = ChunkSize-(slot+1)*4-1;
+		int offset = ChunkSize-(slot+1)*4;
 		Boolean pass = writeChunk(chunkHandle, payload, offset);
 		if(pass) {
 			return FSReturnVals.Success;
 		}
-		
 		return FSReturnVals.Fail;
 	}
 
@@ -118,15 +123,55 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(String chunkHandle, RID RecordID) {
-		int offset = ChunkSize-(RecordID.getSlotNumber()+1)*4-1; // to get offset #
+		//Get first index of record to be deleted
+		int toDeleteIndex = getOffsetFromSlot(chunkHandle, RecordID.getSlotNumber());
 		
-		byte[] loc = readChunk(chunkHandle, offset, 4);
-		int index = ByteBuffer.wrap(loc).getInt();
+		//Get fist index of bytes to be shifted
+		int firstShiftIndex = toDeleteIndex + RecordID.getRecordLength();
 		
+		//Get last index of bytes to be shifted
+		int numOfSlots = getNumOfSlots(chunkHandle);
+		int lastShiftIndex = ChunkSize - numOfSlots*4 - 1;
 		
+		if(lastShiftIndex > firstShiftIndex) {
+			byte[] toShiftBA = readChunk(chunkHandle, firstShiftIndex, firstShiftIndex-lastShiftIndex+1);
+			writeChunk(chunkHandle, toShiftBA, toDeleteIndex);
+		}
+		//Update all offsets so that they point to the correct location in the chunk
+		int currSlot = RecordID.getRecordLength();
+		setOffsetFromSlot(chunkHandle, currSlot, -1);
+		int deletedLength = RecordID.getRecordLength();
+		currSlot+=1; //move on to next slot
+		while(currSlot < numOfSlots) {
+			int offsetVal = getOffsetFromSlot(chunkHandle, currSlot);
+			if(offsetVal > 0) {
+				int newOffset = offsetVal - deletedLength;
+				setOffsetFromSlot(chunkHandle, currSlot, newOffset);
+			}
+			currSlot += 1; //move on to next slot
+		}
 		
-		//int loc = 
-		return null;
+		return FSReturnVals.Success;
+	}
+	
+	private int getNumOfSlots(String chunkHandle) {
+		byte[] slotNum = readChunk(chunkHandle, 4, 4);
+		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
+		return numOfSlots;
+	}
+	
+	private int getOffsetFromSlot(String chunkHandle, int slot) {
+		int offsetIndex = ChunkSize-(slot+1)*4;
+		byte[] offsetBA = readChunk(chunkHandle, offsetIndex, 4);
+		int offset = ByteBuffer.wrap(offsetBA).getInt();
+		return offset;
+	}
+	
+	private void setOffsetFromSlot(String chunkHandle, int slot, int offset) {
+		int offsetIndex = ChunkSize-(slot+1)*4;
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(offset);
+		writeChunk(chunkHandle, bb.array(), offsetIndex);
 	}
 
 	
@@ -154,10 +199,12 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public static void ReadAndProcessRequests()
 	{
+		ChunkServer cs = new ChunkServer();
+		
 		//Used for communication with the Client via the network
 		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
 		ServerSocket commChanel = null;
-		ObjectOutputStream WriteOutput = null;z
+		ObjectOutputStream WriteOutput = null;
 		ObjectInputStream ReadInput = null;
 		
 		try {
