@@ -18,11 +18,11 @@ public class RID {
 		this.chunkHandle = chunkHandle;
 	}
 	
-	public void setOffset(int offset) {
-		this.slotNumber = offset;
+	public void setOffset(int slotNumber) {
+		this.slotNumber = slotNumber;
 	}
 	
-	public int getOffset() {
+	public int getSlotNumber() {
 		return this.slotNumber;
 	}
 	
