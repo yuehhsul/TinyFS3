@@ -3,6 +3,7 @@ package com.client;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import com.chunkserver.ChunkServer;
 import com.client.ClientFS.FSReturnVals;
 
 public class ClientRec {
@@ -20,10 +21,11 @@ public class ClientRec {
 			return ClientFS.FSReturnVals.BadHandle;
 		if (!RecordID.isEmpty() || RecordID == null)
 			return ClientFS.FSReturnVals.BadRecID;
+		if(payload.length > ChunkServer.ChunkSize)
+			return ClientFS.FSReturnVals.RecordTooLong;
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size() -1);
-		RecordID.setChunkHandle(lastChunk);
-		
+		RecordID.setChunkHandle(lastChunk);	
 		if(chunkServer.appendRecord(lastChunk, payload, RecordID) == ClientFS.FSReturnVals.Fail) {
 			RecordID = null;
 			return ClientFS.FSReturnVals.Fail;
