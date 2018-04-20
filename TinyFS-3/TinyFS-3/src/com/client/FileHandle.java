@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class FileHandle {
-	private Map<String, String> chunkAddrMap;
-	private ArrayList<String> chunkList;
+	private Map<String, String> chunkAddrMap; //map of chunkhandle to the chunkServer
+	private ArrayList<String> chunkList; //list of the chunkHandles
 	
 	public FileHandle() {}
 	
