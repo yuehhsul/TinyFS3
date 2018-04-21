@@ -123,6 +123,9 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(String chunkHandle, RID RecordID) {
+		if(getOffsetFromSlot(chunkHandle,RecordID.getSlotNumber()) < 0) {
+			return FSReturnVals.RecDoesNotExist;
+		}
 		//Get first index of record to be deleted
 		int toDeleteIndex = getOffsetFromSlot(chunkHandle, RecordID.getSlotNumber());
 		
@@ -156,6 +159,15 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
 			
+			int secondOffsetFromSlot = getOffsetFromSlot(chunkHandle, 1); //gets offset in second slot
+			int firstRecLength = secondOffsetFromSlot - 12;
+			
+			
+			byte [] firstRec = readChunk(chunkHandle, 12, firstRecLength);
+			if(firstRec.length == 0) { // if the file is empty
+				return FSReturnVals.RecDoesNotExist;
+			}
+			rec.setPayload(firstRec); 
 			return null;
 	}
 	
