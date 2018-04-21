@@ -44,4 +44,8 @@ public class RID {
 			return true;
 		return false;
 	}
+	
+	public boolean checkValid() {
+		return true;
+	}
 }
