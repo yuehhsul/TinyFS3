@@ -73,7 +73,6 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String createChunk() {
 		counter++;
-//		String chunkHandle = csid + String.valueOf(counter);
 		return String.valueOf(counter);
 	}
 	
@@ -160,12 +159,21 @@ public class ChunkServer implements ChunkServerInterface {
 			return null;
 	}
 	
+	/**
+	 * Helper:
+	 * Returns the total number of slots in this chunk
+	 */
 	private int getNumOfSlots(String chunkHandle) {
 		byte[] slotNum = readChunk(chunkHandle, 4, 4);
 		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
 		return numOfSlots;
 	}
 	
+	/**
+	 * Helper:
+	 * Input a slot number and returns the offset of the record that is 
+	 * stored in this slot
+	 */
 	private int getOffsetFromSlot(String chunkHandle, int slot) {
 		int offsetIndex = ChunkSize-(slot+1)*4;
 		byte[] offsetBA = readChunk(chunkHandle, offsetIndex, 4);
@@ -173,6 +181,12 @@ public class ChunkServer implements ChunkServerInterface {
 		return offset;
 	}
 	
+	/**
+	 * Helper:
+	 * Input a slot number and offset value,
+	 * the function would store that offset value in the slot specified by the
+	 * slot number
+	 */
 	private void setOffsetFromSlot(String chunkHandle, int slot, int offset) {
 		int offsetIndex = ChunkSize-(slot+1)*4;
 		ByteBuffer bb = ByteBuffer.allocate(4);
