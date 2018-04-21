@@ -16,12 +16,14 @@ public class Master {
 	private static Map<String, ArrayList<String>>fileNSMap;
 	private static Map<String, ArrayList<String>>fileHandleMap;
 	private static Map<String, String> chunkAddrMap;
+	public ChunkServer cs;
 	
 	public Master() {
 		fileNSMap = new HashMap<String, ArrayList<String>>();
 		fileNSMap.put("/", new ArrayList<String>());
 		fileHandleMap = new HashMap<String, ArrayList<String>>();
 		chunkAddrMap = new HashMap<String, String>();
+		cs = new ChunkServer();
 	}
 
 	/**
@@ -227,11 +229,17 @@ public class Master {
 			System.out.println("CreateFile: file exists");
 			return FSReturnVals.FileExists;
 		}
+		
+		//Call createChunk on cs
+		String chunkHandle = cs.createChunk();
+		
 		//Add file to ns
 		dirContent.add(fileFullName);
 		fileNSMap.put(tgtdir, dirContent);
 		//Add file to fileHandleMap
-		fileHandleMap.put(fileFullName, new ArrayList<String>());
+		ArrayList<String> chunkList = new ArrayList<String>();
+		chunkList.add(chunkHandle);
+		fileHandleMap.put(fileFullName, chunkList);
 		return FSReturnVals.Success;
 	}
 
