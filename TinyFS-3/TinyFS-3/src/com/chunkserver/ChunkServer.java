@@ -16,6 +16,7 @@ import java.util.Arrays;
 import com.client.Client;
 import com.client.FileHandle;
 import com.client.RID;
+import com.client.TinyRec;
 import com.client.ClientFS.FSReturnVals;
 import com.interfaces.ChunkServerInterface;
 
@@ -152,6 +153,11 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		
 		return FSReturnVals.Success;
+	}
+	
+	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
+			
+			return null;
 	}
 	
 	private int getNumOfSlots(String chunkHandle) {
