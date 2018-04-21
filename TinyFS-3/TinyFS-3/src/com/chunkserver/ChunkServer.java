@@ -168,32 +168,17 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
-<<<<<<< HEAD
-			byte[] numRecs=readChunk(chunkHandle, 0,4);
-			if(ByteBuffer.wrap(numRecs).getInt() == 0) {// if no records
-				return FSReturnVals.RecDoesNotExist;
-			}
-			byte [] firstRec;
-			
-			if(ByteBuffer.wrap(numRecs).getInt() ==1) {
-				byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
-				int firstRecLength = ByteBuffer.wrap(nextAvail).getInt() - 12; 
-				firstRec = readChunk(chunkHandle, 12, firstRecLength);
-				
-			}
-			else {
-				int secondOffsetFromSlot = getOffsetFromSlot(chunkHandle, 1); //gets offset in second slot
-				int firstRecLength = secondOffsetFromSlot - 12;
-				firstRec = readChunk(chunkHandle, 12, firstRecLength);
-			}
-			
-			
-			
-			
-			
-			rec.setPayload(firstRec); 
-			return FSReturnVals.Success;
+		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			return FSReturnVals.RecDoesNotExist;
+		}
+
+		int firstRecLength = getRecordLength(chunkHandle, 0);	//Get record length of record 0, which is the first record
+
+		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
+		rec.setPayload(firstRec); 
+		return FSReturnVals.Success;
 	}
+	
 	public FSReturnVals ReadLastRecord(String chunkHandle , TinyRec rec){
 		byte[] numRecs = readChunk(chunkHandle, 0, 4);
 		
@@ -201,29 +186,12 @@ public class ChunkServer implements ChunkServerInterface {
 		if(ByteBuffer.wrap(numRecs).getInt() == 0) {
 			return FSReturnVals.RecDoesNotExist;
 		}
-		if(ByteBuffer.wrap(numRecs).getInt() == 1) {
-			byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
-			int firstRecLength = ByteBuffer.wrap(nextAvail).getInt() - 12; //gets length of this chunk
-			firstRec = readChunk(chunkHandle, 12, firstRecLength);
-		}
+		int numSlots = getNumOfSlots(chunkHandle);
+		int recordLen  = getRecordLength(chunkHandle, numSlots-1);
 		
-		else {
-			int numSlots = getNumOfSlots(chunkHandle);
-			int lastOffset = getOffsetFromSlot(chunkHandle, numSlots-1);
-			byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
-			int recLength = ByteBuffer.wrap(nextAvail).getInt() - lastOffset; //gets length of last offset
-			firstRec = readChunk(chunkHandle, lastOffset, recLength);
-		}
-		return FSReturnVals.Success;
-=======
-		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
-			return FSReturnVals.RecDoesNotExist;
-		}
+		int lastOffset = getOffsetFromSlot(chunkHandle, numSlots-1);
 		
-		int firstRecLength = getRecordLength(chunkHandle, 0);	//Get record length of record 0, which is the first record
-		
-		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
-		rec.setPayload(firstRec); 
+		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
 		return FSReturnVals.Success;
 	}
 	
