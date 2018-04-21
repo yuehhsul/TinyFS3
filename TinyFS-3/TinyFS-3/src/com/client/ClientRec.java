@@ -10,7 +10,7 @@ public class ClientRec {
 	
 	ChunkServer cs;
 
-	ClientRec() {
+	public ClientRec() {
 		cs = new ChunkServer();
 	}
 	/**
