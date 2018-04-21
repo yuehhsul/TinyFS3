@@ -158,17 +158,52 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
-			
-			int secondOffsetFromSlot = getOffsetFromSlot(chunkHandle, 1); //gets offset in second slot
-			int firstRecLength = secondOffsetFromSlot - 12;
-			
-			
-			byte [] firstRec = readChunk(chunkHandle, 12, firstRecLength);
-			if(firstRec.length == 0) { // if the file is empty
+			byte[] numRecs=readChunk(chunkHandle, 0,4);
+			if(ByteBuffer.wrap(numRecs).getInt() == 0) {// if no records
 				return FSReturnVals.RecDoesNotExist;
 			}
+			byte [] firstRec;
+			
+			if(ByteBuffer.wrap(numRecs).getInt() ==1) {
+				byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
+				int firstRecLength = ByteBuffer.wrap(nextAvail).getInt() - 12; 
+				firstRec = readChunk(chunkHandle, 12, firstRecLength);
+				
+			}
+			else {
+				int secondOffsetFromSlot = getOffsetFromSlot(chunkHandle, 1); //gets offset in second slot
+				int firstRecLength = secondOffsetFromSlot - 12;
+				firstRec = readChunk(chunkHandle, 12, firstRecLength);
+			}
+			
+			
+			
+			
+			
 			rec.setPayload(firstRec); 
-			return null;
+			return FSReturnVals.Success;
+	}
+	public FSReturnVals ReadLastRecord(String chunkHandle , TinyRec rec){
+		byte[] numRecs = readChunk(chunkHandle, 0, 4);
+		
+		byte [] firstRec;
+		if(ByteBuffer.wrap(numRecs).getInt() == 0) {
+			return FSReturnVals.RecDoesNotExist;
+		}
+		if(ByteBuffer.wrap(numRecs).getInt() == 1) {
+			byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
+			int firstRecLength = ByteBuffer.wrap(nextAvail).getInt() - 12; //gets length of this chunk
+			firstRec = readChunk(chunkHandle, 12, firstRecLength);
+		}
+		
+		else {
+			int numSlots = getNumOfSlots(chunkHandle);
+			int lastOffset = getOffsetFromSlot(chunkHandle, numSlots-1);
+			byte [] nextAvail = readChunk(chunkHandle, 8,4); // gets next avail offset
+			int recLength = ByteBuffer.wrap(nextAvail).getInt() - lastOffset; //gets length of last offset
+			firstRec = readChunk(chunkHandle, lastOffset, recLength);
+		}
+		return FSReturnVals.Success;
 	}
 	
 	/**
