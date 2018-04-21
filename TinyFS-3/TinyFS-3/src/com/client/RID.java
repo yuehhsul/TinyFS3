@@ -46,6 +46,7 @@ public class RID {
 	}
 	
 	public boolean checkValid() {
+		if(isEmpty()) return false;
 		return true;
 	}
 }
