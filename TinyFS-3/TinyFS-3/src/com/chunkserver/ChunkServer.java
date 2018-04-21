@@ -72,8 +72,18 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Return the chunk handle of the last chunk in the file.
 	 */
 	public String createChunk() {
-		counter++;
-		return String.valueOf(counter);
+		counter += 1;
+		String chunkHandle = String.valueOf(counter);
+		initializeChunk(chunkHandle);
+		return chunkHandle;
+	}
+	
+	public void initializeChunk(String chunkHandle) {
+		ByteBuffer bb = ByteBuffer.allocate(12);
+		bb.putInt(0);
+		bb.putInt(0);
+		bb.putInt(12);
+		writeChunk(chunkHandle, bb.array(), 0);
 	}
 	
 	/**
@@ -158,17 +168,44 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
-			
-			int secondOffsetFromSlot = getOffsetFromSlot(chunkHandle, 1); //gets offset in second slot
-			int firstRecLength = secondOffsetFromSlot - 12;
-			
-			
-			byte [] firstRec = readChunk(chunkHandle, 12, firstRecLength);
-			if(firstRec.length == 0) { // if the file is empty
-				return FSReturnVals.RecDoesNotExist;
-			}
-			rec.setPayload(firstRec); 
-			return null;
+		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			return FSReturnVals.RecDoesNotExist;
+		}
+		
+		int firstRecLength = getRecordLength(chunkHandle, 0);	//Get record length of record 0, which is the first record
+		
+		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
+		rec.setPayload(firstRec); 
+		return FSReturnVals.Success;
+	}
+	
+	/**
+	 * Helper:
+	 * Gets the length of the record
+	 */
+	private int getRecordLength(String chunkHandle, int currSlot) {
+		int nextSlotOffset = -1;
+		//Check if there is only one record
+		int numOfSlots = getNumOfSlots(chunkHandle);
+		if(numOfSlots==1) {
+			nextSlotOffset = getNextAvailableIndex(chunkHandle);
+			return nextSlotOffset - 12;
+		}
+		else {
+			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
+			nextSlotOffset = getOffsetFromSlot(chunkHandle, nextSlot); //gets offset in second slot
+			return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
+		}
+	}
+	
+	/**
+	 * Helper:
+	 * Returns the total number of records in this chunk
+	 */
+	private int getNumOfRecords(String chunkHandle) {
+		byte[] recordNum = readChunk(chunkHandle, 0, 4);
+		int numOfRecords = ByteBuffer.wrap(recordNum).getInt();
+		return numOfRecords;
 	}
 	
 	/**
@@ -179,6 +216,16 @@ public class ChunkServer implements ChunkServerInterface {
 		byte[] slotNum = readChunk(chunkHandle, 4, 4);
 		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
 		return numOfSlots;
+	}
+	
+	/**
+	 * Helper:
+	 * Get the next available index(offset) in the chunk to store a record
+	 */
+	private int getNextAvailableIndex(String chunkHandle) {
+		byte[] nextIndexBA = readChunk(chunkHandle, 8, 4);
+		int nextIndex = ByteBuffer.wrap(nextIndexBA).getInt();
+		return nextIndex;
 	}
 	
 	/**
@@ -195,15 +242,31 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	/**
 	 * Helper:
-	 * Input a slot number and offset value,
-	 * the function would store that offset value in the slot specified by the
-	 * slot number
+	 * Input a slot number and offset
+	 * the function will store that offset in this slot
 	 */
 	private void setOffsetFromSlot(String chunkHandle, int slot, int offset) {
 		int offsetIndex = ChunkSize-(slot+1)*4;
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.putInt(offset);
 		writeChunk(chunkHandle, bb.array(), offsetIndex);
+	}
+	
+	/**
+	 * Helper:
+	 * Returns the next slot where its stored value is not -1 (Valid slot)
+	 */
+	private int getNextValidSlot(String chunkHandle, int currSlot) {
+		int totalSlots = getNumOfSlots(chunkHandle);
+		currSlot += 1;
+		while(currSlot<totalSlots) {
+			int offset = getOffsetFromSlot(chunkHandle, currSlot);
+			if(offset>0) {
+				return currSlot;
+			}
+			currSlot += 1;
+		}
+		return -1;
 	}
 
 	

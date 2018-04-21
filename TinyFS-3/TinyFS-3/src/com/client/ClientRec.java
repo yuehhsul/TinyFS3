@@ -36,7 +36,11 @@ public class ClientRec {
 		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size()-1);
-		return cs.AppendRecord(lastChunk, payload, RecordID);
+		if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.Fail) {
+			RecordID = null;
+			return FSReturnVals.Fail;
+		}
+		return FSReturnVals.Success;
 	}
 
 	/**
@@ -80,9 +84,6 @@ public class ClientRec {
 		}
 		if(ofh.checkValid()==false) {
 			return FSReturnVals.BadHandle;
-		}
-		if(ofh.isEmpty()) {
-			return FSReturnVals.RecDoesNotExist;
 		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String firstChunk = chunkList.get(0);
