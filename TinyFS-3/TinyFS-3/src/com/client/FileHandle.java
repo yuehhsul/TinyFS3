@@ -26,4 +26,8 @@ public class FileHandle {
 		chunkList.add(chunk);
 		chunkAddrMap.put(chunk, "");
 	}
+	
+	public boolean checkValid() {
+		return true;
+	}
 }

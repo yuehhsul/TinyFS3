@@ -7,7 +7,12 @@ import com.chunkserver.ChunkServer;
 import com.client.ClientFS.FSReturnVals;
 
 public class ClientRec {
+	
+	ChunkServer cs;
 
+	ClientRec() {
+		cs = new ChunkServer();
+	}
 	/**
 	 * Appends a record to the open file as specified by ofh Returns BadHandle
 	 * if ofh is invalid Returns BadRecID if the specified RID is not null
@@ -17,20 +22,28 @@ public class ClientRec {
 	 * Example usage: AppendRecord(FH1, obama, RecID1)
 	 */
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
-		if(ofh == null || ofh.getChunkList() == null)
-			return ClientFS.FSReturnVals.BadHandle;
-		if (!RecordID.isEmpty() || RecordID == null)	//TODO: ask if there is a mistake in the comment
-			return ClientFS.FSReturnVals.BadRecID;
+		if(ofh == null) {
+			return FSReturnVals.BadHandle;
+		}
+		if(ofh.checkValid()==false) {
+			return FSReturnVals.BadHandle;
+		}
+		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
+			return FSReturnVals.BadRecID;
+		}
+		if(!RecordID.checkValid()) {
+			return FSReturnVals.BadRecID;
+		}
 		if(payload.length > ChunkServer.ChunkSize)
-			return ClientFS.FSReturnVals.RecordTooLong;
+			return FSReturnVals.RecordTooLong;
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size() -1);
-		RecordID.setChunkHandle(lastChunk);	
-		if(chunkServer.appendRecord(lastChunk, payload, RecordID) == ClientFS.FSReturnVals.Fail) {
+//		RecordID.setChunkHandle(lastChunk);	
+		if(cs.AppendRecord(lastChunk, payload, RecordID) == FSReturnVals.Fail) {
 			RecordID = null;
-			return ClientFS.FSReturnVals.Fail;
+			return FSReturnVals.Fail;
 		}
-		return ClientFS.FSReturnVals.Success;
+		return FSReturnVals.Success;
 	}
 
 	/**
@@ -42,8 +55,21 @@ public class ClientRec {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
+		if(ofh == null) {
+			return FSReturnVals.BadHandle;
+		}
+		if(ofh.checkValid()==false) {
+			return FSReturnVals.BadHandle;
+		}
+		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
+			return FSReturnVals.BadRecID;
+		}
+		if(!RecordID.checkValid()) {
+			return FSReturnVals.BadRecID;
+		}
+		String chunkHandle = RecordID.getChunkHandle();
 		
-		return null;
+		return cs.DeleteRecord(chunkHandle, RecordID);
 	}
 
 	/**
