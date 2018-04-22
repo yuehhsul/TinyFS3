@@ -284,6 +284,7 @@ public class Master {
 	 */
 	public FSReturnVals OpenFile(String FilePath, FileHandle ofh) {
 		if(!fileHandleMap.containsKey(FilePath)) {
+			System.out.println("File doesn't exist");
 			return FSReturnVals.FileDoesNotExist;
 		}
 		ArrayList<String> chunkList = fileHandleMap.get(FilePath);
@@ -295,6 +296,8 @@ public class Master {
 		}
 		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList);
 		ofh = fh;
+		System.out.println("hey");
+		System.out.println(ofh.getChunkList().size());
 		return FSReturnVals.Success;
 	}
 
@@ -304,6 +307,7 @@ public class Master {
 	 * Example usage: CloseFile(FH1)
 	 */
 	public FSReturnVals CloseFile(FileHandle ofh) {
+		ofh.clear();
 		return null;
 	}
 	

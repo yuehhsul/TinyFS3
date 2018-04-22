@@ -85,6 +85,9 @@ public class ClientRec {
 		if(ofh.checkValid()==false) {
 			return FSReturnVals.BadHandle;
 		}
+		if(ofh.isEmpty()) {
+			return FSReturnVals.RecDoesNotExist;
+		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String firstChunk = chunkList.get(0);
 		

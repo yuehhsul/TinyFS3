@@ -1,5 +1,6 @@
 package com.client;
 
+import com.client.ClientFS.FSReturnVals;
 import com.master.Master;
 
 public class ClientFS {
@@ -98,7 +99,9 @@ public class ClientFS {
 	 * Example usage: OpenFile("/Shahram/CSCI485/Lecture1/Intro.pptx", FH1)
 	 */
 	public FSReturnVals OpenFile(String FilePath, FileHandle ofh) {
-		return null;
+		if(ofh==null) return FSReturnVals.BadHandle;
+		if(!ofh.checkValid()) return FSReturnVals.BadHandle;
+		return master.OpenFile(FilePath, ofh);
 	}
 
 	/**
@@ -107,7 +110,11 @@ public class ClientFS {
 	 * Example usage: CloseFile(FH1)
 	 */
 	public FSReturnVals CloseFile(FileHandle ofh) {
-		return null;
+		if(ofh==null) return FSReturnVals.BadHandle;
+		if(!ofh.checkValid()) return FSReturnVals.BadHandle;
+		if(ofh.isEmpty()) return FSReturnVals.BadHandle;
+		
+		return master.CloseFile(ofh);
 	}
 
 }

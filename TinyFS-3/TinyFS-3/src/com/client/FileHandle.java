@@ -76,4 +76,9 @@ public class FileHandle {
 //		if(isEmpty()) return false;
 		return true;
 	}
+	
+	public void clear() {
+		chunkAddrMap.clear();
+		chunkList = new ArrayList<String>();
+	}
 }
