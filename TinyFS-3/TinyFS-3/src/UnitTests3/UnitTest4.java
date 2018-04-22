@@ -43,6 +43,7 @@ public class UnitTest4 {
 		byte[] payload = null;
 		int intSize = Integer.SIZE / Byte.SIZE;	// 4 bytes
 		ClientRec crec = new ClientRec();
+		crec.init(cfs);
 		
 		System.out.println(TestName + "Construct a record with the first four bytes equal to i, followed with 5 char attributes each with length 20.");
 		for (int i = 0; i < NumRecs; i++){
@@ -54,7 +55,7 @@ public class UnitTest4 {
 			}
 			RID rid = new RID();
 			FSReturnVals afs = crec.AppendRecord(fh, payload, rid);
-//			System.out.println("---------Append--------");
+			System.out.println("---------Append--------");
 			if(afs != FSReturnVals.Success ){
 				System.out.println(afs);
 				System.out.println("Unit test 4 result: fail!");
@@ -71,6 +72,7 @@ public class UnitTest4 {
     		return;
 		}
 		TinyRec r1 = new TinyRec();
+		System.out.println("-------to read first rec-------");
 		FSReturnVals retRR = crec.ReadFirstRecord(fh, r1);
 		System.out.println("r1 payload size = "+r1.getPayload().length);
 		if(retRR != FSReturnVals.Success ){
@@ -101,7 +103,6 @@ public class UnitTest4 {
 			} else {
 				r1.setRID(null);
 			}
-				
 		}
 		
 		System.out.println(TestName + "Delete the odd numbered records using their first four bytes.");

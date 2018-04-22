@@ -118,7 +118,6 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		int slot = getNumOfSlots(chunkHandle);
 		
-		int slotNum = ChunkSize-(slot+1)*4;
 		int toWriteIndex = getNextAvailableIndex(chunkHandle);
 //		System.out.println("numSlots "+slot+ "slotNUm "+slot+" toWriteIndex "+toWriteIndex);
 		boolean pass = writeChunk(chunkHandle, payload, toWriteIndex);
@@ -197,6 +196,8 @@ public class ChunkServer implements ChunkServerInterface {
 		System.out.println("first slot num = "+firstSlot);
 		int firstRecLength = getRecordLength(chunkHandle, firstSlot);	//Get record length of the first valid record, which is the first record
 
+		System.out.println("---First record Length is "+firstRecLength+"---");
+		
 		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
 		System.out.println("length = "+firstRecLength);
 		rec.setPayload(firstRec); 
@@ -222,13 +223,16 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public FSReturnVals ReadNextRecord(String chunkHandle, String nextChunkHandle, TinyRec rec, boolean lastChunk, int currSlot) {
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			rec.setRID(null);
 			return FSReturnVals.RecDoesNotExist;
 		}
 		
 		boolean changedChunk = false;
 		if(currSlot==getLastSlotNumber(chunkHandle)) {
-			if(lastChunk)
+			if(lastChunk) {
+				rec.setRID(null);
 				return FSReturnVals.RecDoesNotExist;
+			}
 			changedChunk = true;
 		}
 		
@@ -256,13 +260,16 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public FSReturnVals ReadPrevRecord(String chunkHandle, String prevChunkHandle, TinyRec rec, boolean firstChunk, int currSlot) {
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			rec.setRID(null);
 			return FSReturnVals.RecDoesNotExist;
 		}
 		
 		boolean changedChunk = false;
 		if(currSlot==getFirstSlotNumber(chunkHandle)) {
-			if(firstChunk)
+			if(firstChunk) {
+				rec.setRID(null);
 				return FSReturnVals.RecDoesNotExist;
+			}
 			changedChunk = true;
 		}
 		
@@ -306,11 +313,13 @@ public class ChunkServer implements ChunkServerInterface {
 		else if(getLastSlotNumber(chunkHandle)==currSlot) {	//Check if this is the slot of the last record (Not necessarily the last slot)
 			nextSlotOffset = getNextAvailableIndex(chunkHandle);
 //			System.out.println("getNext got: "+nextSlotOffset);
+			System.out.println("-------is last slot--------");
 		}
 		else {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			nextSlotOffset = getOffsetFromSlot(chunkHandle, nextSlot); //gets offset in second slot
 			System.out.println("nextSlot got: "+nextSlot);
+			System.out.println("-------is middle slot--------");
 		}
 		System.out.println("nextSlotOffset="+nextSlotOffset+" getOffsetFromSlot(curr)="+getOffsetFromSlot(chunkHandle, currSlot));
 		return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
@@ -408,14 +417,15 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Returns first valid slot
 	 */
 	private int getFirstSlotNumber(String chunkHandle) {
-		int currSlot = -1;
+//		int currSlot = -1;
 		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
 			System.out.println("Slot = "+i+" has offset = "+getOffsetFromSlot(chunkHandle, i));
 			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Valid slot
-				return currSlot;
+				System.out.println("got first slot");
+				return i;
 			}
 		}
-		return currSlot;
+		return -1;
 	}
 	
 	/**
@@ -451,7 +461,7 @@ public class ChunkServer implements ChunkServerInterface {
 		int offsetIndex = ChunkSize-(slot+1)*4;
 		byte[] offsetBA = readChunk(chunkHandle, offsetIndex, 4);
 		int offset = ByteBuffer.wrap(offsetBA).getInt();
-		System.out.println("reading from index:"+offsetIndex+" got:"+offset);
+//		System.out.println("reading from index:"+offsetIndex+" got:"+offset);
 		return offset;
 	}
 	

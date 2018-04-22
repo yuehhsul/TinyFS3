@@ -13,7 +13,10 @@ public class ClientRec {
 
 	public ClientRec() {
 		cs = new ChunkServer();
-		cfs = new ClientFS();
+	}
+	
+	public void init(ClientFS clientFS) {
+		cfs = clientFS;
 	}
 	/**
 	 * Appends a record to the open file as specified by ofh Returns BadHandle
@@ -43,8 +46,10 @@ public class ClientRec {
 			return FSReturnVals.Fail;
 		}
 		else if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.RecordTooLong) {
+			System.out.println("creating new chunk");
+			System.out.println("ofhgetdir = "+ofh.getDir());
 			ofh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
-			AppendRecord(ofh, payload, RecordID);
+			return AppendRecord(ofh, payload, RecordID);
 //			return FSReturnVals.RecordTooLong;
 		}
 		return FSReturnVals.Success;
@@ -142,9 +147,11 @@ public class ClientRec {
 			return FSReturnVals.RecDoesNotExist;
 		}
 		if(pivot==null) {
+			rec.setRID(null);
 			return FSReturnVals.RecDoesNotExist;
 		}
 		if(!pivot.checkValid()) {
+			rec.setRID(null);
 			return FSReturnVals.RecDoesNotExist;
 		}
 		String chunkHandle = pivot.getChunkHandle();

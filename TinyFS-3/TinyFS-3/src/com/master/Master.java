@@ -244,9 +244,11 @@ public class Master {
 	}
 	
 	public FileHandle createNewChunk(String tgtdir, String filename) {
-		if(tgtdir.length()>2) {
-			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
-		}
+//		if(tgtdir.length()>2) {
+//			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
+//		}
+		
+//		System.out.println("subtgtdir = "+tgtdir);
 		
 		//Check tgtdir directory exists
 		if(!fileNSMap.containsKey(tgtdir)) {
@@ -255,8 +257,8 @@ public class Master {
 		}
 		
 		ArrayList<String> dirContent = fileNSMap.get(tgtdir);
-		String fileFullName = tgtdir + "/" + filename;
-		if(!dirContent.contains(fileFullName)) {
+//		String fileFullName = tgtdir + "/" + filename;
+		if(!dirContent.contains(filename)) {
 			System.out.println("CreateChunk: no such file");
 			return null;
 		}
