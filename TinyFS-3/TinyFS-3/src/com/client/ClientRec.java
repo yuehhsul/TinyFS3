@@ -28,7 +28,7 @@ public class ClientRec {
 		if(ofh.checkValid()==false) {
 			return FSReturnVals.BadHandle;
 		}
-		if (RecordID != null) {	//TODO: ask if there is a mistake in the comment
+		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
 			return FSReturnVals.BadRecID;
 		}
 		if(payload.length > ChunkServer.ChunkSize) {
@@ -142,18 +142,13 @@ public class ClientRec {
 		}
 		String chunkHandle = pivot.getChunkHandle();
 		int slotNum = pivot.getSlotNumber();
-		boolean changedChunk = false;
-		
-		if(pivot.isLastRecordInChunk()) {
-			if(ofh.isLastChunk(chunkHandle)) {
-				System.out.println("ReadNextRecord: Failed, already at the last record");
-				return FSReturnVals.Fail;
-			}
-			chunkHandle = ofh.getNextChunk(chunkHandle);
-			changedChunk = true;
+		boolean lastChunk = false;
+		if(ofh.isLastChunk(chunkHandle)) {
+			lastChunk = true;
 		}
+		String nextChunkHandle = ofh.getNextChunk(chunkHandle);
 		
-		return cs.ReadNextRecord(chunkHandle, rec, changedChunk, slotNum);
+		return cs.ReadNextRecord(chunkHandle, nextChunkHandle, rec, lastChunk, slotNum);
 	}
 
 	/**
@@ -182,18 +177,14 @@ public class ClientRec {
 		}
 		String chunkHandle = pivot.getChunkHandle();
 		int slotNum = pivot.getSlotNumber();
-		boolean changedChunk = false;
 		
-		if(pivot.isFirstRecordInChunk()) {
-			if(ofh.isFirstChunk(chunkHandle)) {
-				System.out.println("ReadPrevRecord: Failed, already at the first record");
-				return FSReturnVals.Fail;
-			}
-			chunkHandle = ofh.getPrevChunk(chunkHandle);
-			changedChunk = true;
+		boolean firstChunk = false;
+		if(ofh.isFirstChunk(chunkHandle)) {
+			firstChunk = true;
 		}
+		String prevChunkHandle = ofh.getNextChunk(chunkHandle);
 		
-		return cs.ReadPrevRecord(chunkHandle, rec, changedChunk, slotNum);
+		return cs.ReadPrevRecord(chunkHandle, prevChunkHandle, rec, firstChunk, slotNum);
 	}
 
 }

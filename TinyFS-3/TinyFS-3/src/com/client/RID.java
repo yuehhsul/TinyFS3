@@ -6,56 +6,40 @@ public class RID {
 				//an offset of 1 means it is the second to last record and i must go from the end of the 
 				//chunk handle the chunklength - offset * 4
 	private static int recordLength;
-	private static boolean isFirstRecord;
-	private static boolean isLastRecord;
 	public RID() {
+		chunkHandle = null;
 		slotNumber = -1;
-		isLastRecord = false;
+		recordLength = -1;
 	}
 	
-	public RID(String chunkHandle, int offset) {
-		this.chunkHandle = chunkHandle;
-		this.slotNumber = offset;
+	public RID(String chunkHandleName, int slot, int length) {
+		chunkHandle = chunkHandleName;
+		slotNumber = slot;
+		recordLength = length;
 	}
 	
-	public void setChunkHandle(String chunkHandle) {
-		this.chunkHandle = chunkHandle;
+	public void setChunkHandle(String chunkHandleName) {
+		chunkHandle = chunkHandleName;
 	}
 	
 	public String getChunkHandle() {
-		return this.chunkHandle;
+		return chunkHandle;
 	}
 	
-	public void setSlotNumber(int slotNumber) {
-		this.slotNumber = slotNumber;
+	public void setSlotNumber(int slot) {
+		slotNumber = slot;
 	}
 	
 	public int getSlotNumber() {
-		return this.slotNumber;
+		return slotNumber;
 	}
 	
 	public void setRecordLength(int length) {
-		this.recordLength = length;
+		recordLength = length;
 	}
 	
 	public int getRecordLength() {
-		return this.recordLength;
-	}
-	
-	public void setLastRecord(boolean isLast) {
-		isLastRecord = isLast;
-	}
-	
-	public boolean isLastRecordInChunk() {
-		return isLastRecord;
-	}
-	
-	public void setFirstRecord(boolean isFirst) {
-		isFirstRecord = isFirst;
-	}
-	
-	public boolean isFirstRecordInChunk() {
-		return isFirstRecord;
+		return recordLength;
 	}
 	
 	public boolean isEmpty() {

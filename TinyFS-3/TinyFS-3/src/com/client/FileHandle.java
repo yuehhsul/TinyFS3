@@ -20,7 +20,6 @@ public class FileHandle {
 		}
 		chunkAddrMap = map;
 		chunkList = list;
-		System.out.println("init list size = "+list.size());
 	}
 	
 	public ArrayList<String> getChunkList() {

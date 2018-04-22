@@ -288,7 +288,6 @@ public class Master {
 			return FSReturnVals.FileDoesNotExist;
 		}
 		ArrayList<String> chunkList = fileHandleMap.get(FilePath);
-		System.out.println("SIZE is "+chunkList.size());
 		Map<String, String> fileChunkAddrMap = new HashMap<String, String>();
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkHandle = chunkList.get(i);

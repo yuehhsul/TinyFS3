@@ -114,11 +114,16 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
 		int slot = getNumOfSlots(chunkHandle);
-		RecordID.setSlotNumber(slot); //this will be the offset that we want to write to the file
+//		RecordID.setSlotNumber(slot); //this will be the offset that we want to write to the file
 		
 		int offset = ChunkSize-(slot+1)*4;
-		Boolean pass = writeChunk(chunkHandle, payload, offset);
+		boolean pass = writeChunk(chunkHandle, payload, offset);
+		boolean isFirst = false;
+		if(slot==getFirstSlotNumber(chunkHandle)) isFirst = true;
 		if(pass) {
+			//Set RID
+			RID rid = new RID(chunkHandle, slot, payload.length);
+			RecordID = rid;
 			//Manage metadata
 			setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)+1);
 			setNumOfSlots(chunkHandle, getNumOfSlots(chunkHandle)+1);
@@ -172,6 +177,8 @@ public class ChunkServer implements ChunkServerInterface {
 		setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)-1);
 		setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)-deletedLength);
 		
+		RecordID = null;
+		
 		return FSReturnVals.Success;
 	}
 	
@@ -202,9 +209,16 @@ public class ChunkServer implements ChunkServerInterface {
 		return FSReturnVals.Success;
 	}
 	
-	public FSReturnVals ReadNextRecord(String chunkHandle, TinyRec rec, boolean changedChunk, int currSlot) {
+	public FSReturnVals ReadNextRecord(String chunkHandle, String nextChunkHandle, TinyRec rec, boolean lastChunk, int currSlot) {
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
 			return FSReturnVals.RecDoesNotExist;
+		}
+		
+		boolean changedChunk = false;
+		if(currSlot==getLastSlotNumber(chunkHandle)) {
+			if(lastChunk)
+				return FSReturnVals.RecDoesNotExist;
+			changedChunk = true;
 		}
 		
 		//Case1: hasn't changed chunk, get next slot
@@ -218,16 +232,23 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case2: changed chunk, read first record using first valid slot
 		//Note: this chunkhandle is already the new chunkHandle
 		else {
-			int firstSlotNum = getFirstSlotNumber(chunkHandle);
-			int recordLen = getRecordLength(chunkHandle, firstSlotNum);
-			rec.setPayload(readChunk(chunkHandle, 12, recordLen));
+			int firstSlotNum = getFirstSlotNumber(nextChunkHandle);
+			int recordLen = getRecordLength(nextChunkHandle, firstSlotNum);
+			rec.setPayload(readChunk(nextChunkHandle, 12, recordLen));
 			return FSReturnVals.Success;
 		}
 	}
 	
-	public FSReturnVals ReadPrevRecord(String chunkHandle, TinyRec rec, boolean changedChunk, int currSlot) {
+	public FSReturnVals ReadPrevRecord(String chunkHandle, String prevChunkHandle, TinyRec rec, boolean firstChunk, int currSlot) {
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
 			return FSReturnVals.RecDoesNotExist;
+		}
+		
+		boolean changedChunk = false;
+		if(currSlot==getFirstSlotNumber(chunkHandle)) {
+			if(firstChunk)
+				return FSReturnVals.RecDoesNotExist;
+			changedChunk = true;
 		}
 		
 		//Case1: hasn't changed chunk, get prev slot
@@ -241,10 +262,10 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case2: changed chunk, read last record using last valid slot
 		//Note: this chunkhandle is already the new chunkHandle
 		else {
-			int lastSlotNum = getLastSlotNumber(chunkHandle);
-			int lastSlotOffset = getOffsetFromSlot(chunkHandle, lastSlotNum);
-			int recordLen = getRecordLength(chunkHandle, lastSlotNum);
-			rec.setPayload(readChunk(chunkHandle, lastSlotOffset, recordLen));
+			int lastSlotNum = getLastSlotNumber(prevChunkHandle);
+			int lastSlotOffset = getOffsetFromSlot(prevChunkHandle, lastSlotNum);
+			int recordLen = getRecordLength(prevChunkHandle, lastSlotNum);
+			rec.setPayload(readChunk(prevChunkHandle, lastSlotOffset, recordLen));
 			return FSReturnVals.Success;
 		}
 	}

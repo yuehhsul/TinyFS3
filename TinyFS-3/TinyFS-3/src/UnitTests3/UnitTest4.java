@@ -36,7 +36,6 @@ public class UnitTest4 {
 		//get the file handle first
 		FileHandle fh = new FileHandle();
 		FSReturnVals ofd = cfs.OpenFile("/" + dir1 + "/emp", fh);
-		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
 		if(ofd != FSReturnVals.Success ){
 			System.out.println("Unit test 4 result: fail!");
     		return;
@@ -54,29 +53,33 @@ public class UnitTest4 {
 				payload[j] = 'a';
 			}
 			RID rid = new RID();
-			crec.AppendRecord(fh, payload, rid);
+			FSReturnVals afs = crec.AppendRecord(fh, payload, rid);
+			if(afs != FSReturnVals.Success ){
+				System.out.println(afs);
+				System.out.println("Unit test 4 result: fail!");
+	    		return;
+			}
 		}
 		fsrv = cfs.CloseFile(fh);
 		
 		System.out.println(TestName + "Scan all records in a file");
-		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
 		ofd = cfs.OpenFile("/" + dir1 + "/emp", fh);
-		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
 		if(ofd != FSReturnVals.Success ){
-			System.out.println("Unit test 4 result: fail!");
 			System.out.println(ofd);
+			System.out.println("Unit test 4 result: fail!");
     		return;
 		}
 		TinyRec r1 = new TinyRec();
 		FSReturnVals retRR = crec.ReadFirstRecord(fh, r1);
 		if(retRR != FSReturnVals.Success ){
-			System.out.println("Unit test 4 result: fail!");
 			System.out.println(retRR);
+			System.out.println("Unit test 4 result: fail!");
     		return;
 		}
 		int cntr = 1;
 		ArrayList<RID> vect = new ArrayList<RID>();
 		while (r1.getRID() != null){
+			System.out.println("r1.getRID is not null");
 			TinyRec r2 = new TinyRec();
 			FSReturnVals retval = crec.ReadNextRecord(fh, r1.getRID(), r2);
 			//if(retval != FSReturnVals.Success){
@@ -107,9 +110,9 @@ public class UnitTest4 {
 				return;
 			}
 		}
-		
 		fsrv = cfs.CloseFile(fh);
 		if(cntr != NumRecs){
+			System.out.println("cntr=="+cntr+" NumRecs=="+NumRecs);
 			System.out.println("Unit test 4 result: fail!");
     		return;
 		}
