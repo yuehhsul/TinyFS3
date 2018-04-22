@@ -114,12 +114,9 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
 		int slot = getNumOfSlots(chunkHandle);
-//		RecordID.setSlotNumber(slot); //this will be the offset that we want to write to the file
 		
 		int offset = ChunkSize-(slot+1)*4;
 		boolean pass = writeChunk(chunkHandle, payload, offset);
-		boolean isFirst = false;
-		if(slot==getFirstSlotNumber(chunkHandle)) isFirst = true;
 		if(pass) {
 			//Set RID
 			RID rid = new RID(chunkHandle, slot, payload.length);
@@ -193,6 +190,8 @@ public class ChunkServer implements ChunkServerInterface {
 
 		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
 		rec.setPayload(firstRec); 
+		RID rid = new RID(chunkHandle, firstSlot, firstRecLength);
+		rec.setRID(rid);
 		return FSReturnVals.Success;
 	}
 	
@@ -206,6 +205,8 @@ public class ChunkServer implements ChunkServerInterface {
 		int lastOffset = getOffsetFromSlot(chunkHandle, lastSlot);
 		
 		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
+		RID rid = new RID(chunkHandle, lastSlot, recordLen);
+		rec.setRID(rid);
 		return FSReturnVals.Success;
 	}
 	
@@ -227,6 +228,8 @@ public class ChunkServer implements ChunkServerInterface {
 			int recordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
 			int recordLen = getRecordLength(chunkHandle, nextSlot);
 			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+			RID rid = new RID(chunkHandle, nextSlot, recordLen);
+			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
 		//Case2: changed chunk, read first record using first valid slot
@@ -235,6 +238,8 @@ public class ChunkServer implements ChunkServerInterface {
 			int firstSlotNum = getFirstSlotNumber(nextChunkHandle);
 			int recordLen = getRecordLength(nextChunkHandle, firstSlotNum);
 			rec.setPayload(readChunk(nextChunkHandle, 12, recordLen));
+			RID rid = new RID(chunkHandle, firstSlotNum, recordLen);
+			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
 	}
@@ -257,6 +262,8 @@ public class ChunkServer implements ChunkServerInterface {
 			int recordOffset = getOffsetFromSlot(chunkHandle, prevSlot);
 			int recordLen = getRecordLength(chunkHandle, prevSlot);
 			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+			RID rid = new RID(chunkHandle, prevSlot, recordLen);
+			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
 		//Case2: changed chunk, read last record using last valid slot
@@ -266,6 +273,8 @@ public class ChunkServer implements ChunkServerInterface {
 			int lastSlotOffset = getOffsetFromSlot(prevChunkHandle, lastSlotNum);
 			int recordLen = getRecordLength(prevChunkHandle, lastSlotNum);
 			rec.setPayload(readChunk(prevChunkHandle, lastSlotOffset, recordLen));
+			RID rid = new RID(chunkHandle, lastSlotNum, recordLen);
+			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
 	}
