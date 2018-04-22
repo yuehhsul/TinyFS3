@@ -224,6 +224,30 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 	}
 	
+	public FSReturnVals ReadPrevRecord(String chunkHandle, TinyRec rec, boolean changedChunk, int currSlot) {
+		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			return FSReturnVals.RecDoesNotExist;
+		}
+		
+		//Case1: hasn't changed chunk, get prev slot
+		if(!changedChunk) {
+			int prevSlot = getPrevValidSlot(chunkHandle, currSlot);
+			int recordOffset = getOffsetFromSlot(chunkHandle, prevSlot);
+			int recordLen = getRecordLength(chunkHandle, prevSlot);
+			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+			return FSReturnVals.Success;
+		}
+		//Case2: changed chunk, read last record using last valid slot
+		//Note: this chunkhandle is already the new chunkHandle
+		else {
+			int lastSlotNum = getLastSlotNumber(chunkHandle);
+			int lastSlotOffset = getOffsetFromSlot(chunkHandle, lastSlotNum);
+			int recordLen = getRecordLength(chunkHandle, lastSlotNum);
+			rec.setPayload(readChunk(chunkHandle, lastSlotOffset, recordLen));
+			return FSReturnVals.Success;
+		}
+	}
+	
 	/**
 	 * Helper:
 	 * Gets the length of the record
@@ -388,6 +412,22 @@ public class ChunkServer implements ChunkServerInterface {
 		int totalSlots = getNumOfSlots(chunkHandle);
 		currSlot += 1;
 		while(currSlot<totalSlots) {
+			int offset = getOffsetFromSlot(chunkHandle, currSlot);
+			if(offset>0) {
+				return currSlot;
+			}
+			currSlot += 1;
+		}
+		return -1;
+	}
+	
+	/**
+	 * Helper:
+	 * Returns the prev slot where its stored value is not -1 (Valid slot)
+	 */
+	private int getPrevValidSlot(String chunkHandle, int currSlot) {
+		currSlot += 1;
+		while(currSlot>=0) {
 			int offset = getOffsetFromSlot(chunkHandle, currSlot);
 			if(offset>0) {
 				return currSlot;
