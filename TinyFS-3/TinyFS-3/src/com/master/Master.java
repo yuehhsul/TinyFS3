@@ -288,6 +288,7 @@ public class Master {
 			return FSReturnVals.FileDoesNotExist;
 		}
 		ArrayList<String> chunkList = fileHandleMap.get(FilePath);
+		System.out.println("SIZE is "+chunkList.size());
 		Map<String, String> fileChunkAddrMap = new HashMap<String, String>();
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkHandle = chunkList.get(i);
@@ -296,8 +297,6 @@ public class Master {
 		}
 		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList);
 		ofh = fh;
-		System.out.println("hey");
-		System.out.println(ofh.getChunkList().size());
 		return FSReturnVals.Success;
 	}
 
@@ -307,8 +306,8 @@ public class Master {
 	 * Example usage: CloseFile(FH1)
 	 */
 	public FSReturnVals CloseFile(FileHandle ofh) {
-		ofh.clear();
-		return null;
+//		ofh.clear();
+		return FSReturnVals.Success;
 	}
 	
 	public static void main(String args[])

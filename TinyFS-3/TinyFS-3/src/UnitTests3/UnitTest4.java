@@ -36,6 +36,11 @@ public class UnitTest4 {
 		//get the file handle first
 		FileHandle fh = new FileHandle();
 		FSReturnVals ofd = cfs.OpenFile("/" + dir1 + "/emp", fh);
+		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
+		if(ofd != FSReturnVals.Success ){
+			System.out.println("Unit test 4 result: fail!");
+    		return;
+		}
 		byte[] payload = null;
 		int intSize = Integer.SIZE / Byte.SIZE;	// 4 bytes
 		ClientRec crec = new ClientRec();
@@ -54,9 +59,21 @@ public class UnitTest4 {
 		fsrv = cfs.CloseFile(fh);
 		
 		System.out.println(TestName + "Scan all records in a file");
+		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
 		ofd = cfs.OpenFile("/" + dir1 + "/emp", fh);
+		System.out.println("fh.getchunklistsize = "+fh.getChunkList().size());
+		if(ofd != FSReturnVals.Success ){
+			System.out.println("Unit test 4 result: fail!");
+			System.out.println(ofd);
+    		return;
+		}
 		TinyRec r1 = new TinyRec();
 		FSReturnVals retRR = crec.ReadFirstRecord(fh, r1);
+		if(retRR != FSReturnVals.Success ){
+			System.out.println("Unit test 4 result: fail!");
+			System.out.println(retRR);
+    		return;
+		}
 		int cntr = 1;
 		ArrayList<RID> vect = new ArrayList<RID>();
 		while (r1.getRID() != null){

@@ -1,13 +1,13 @@
 package com.client;
 
 public class RID {
-	private String chunkHandle;
-	private int slotNumber; //this is the offset of records from the end, not the number of byte
+	private static String chunkHandle;
+	private static int slotNumber; //this is the offset of records from the end, not the number of byte
 				//an offset of 1 means it is the second to last record and i must go from the end of the 
 				//chunk handle the chunklength - offset * 4
-	private int recordLength;
-	private boolean isFirstRecord;
-	private boolean isLastRecord;
+	private static int recordLength;
+	private static boolean isFirstRecord;
+	private static boolean isLastRecord;
 	public RID() {
 		slotNumber = -1;
 		isLastRecord = false;

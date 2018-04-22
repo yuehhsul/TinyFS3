@@ -112,7 +112,7 @@ public class ClientFS {
 	public FSReturnVals CloseFile(FileHandle ofh) {
 		if(ofh==null) return FSReturnVals.BadHandle;
 		if(!ofh.checkValid()) return FSReturnVals.BadHandle;
-		if(ofh.isEmpty()) return FSReturnVals.BadHandle;
+//		if(ofh.isEmpty()) return FSReturnVals.BadHandle;
 		
 		return master.CloseFile(ofh);
 	}

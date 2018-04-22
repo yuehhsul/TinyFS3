@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileHandle {
-	private Map<String, String> chunkAddrMap; //map of chunkhandle to the chunkServer
-	private ArrayList<String> chunkList; //list of the chunkHandles
+	private static Map<String, String> chunkAddrMap; //map of chunkhandle to the chunkServer
+	private static ArrayList<String> chunkList; //list of the chunkHandles
 	
 	public FileHandle() {
 		chunkAddrMap = new HashMap<String, String>();
@@ -20,6 +20,7 @@ public class FileHandle {
 		}
 		chunkAddrMap = map;
 		chunkList = list;
+		System.out.println("init list size = "+list.size());
 	}
 	
 	public ArrayList<String> getChunkList() {
@@ -68,7 +69,9 @@ public class FileHandle {
 	}
 	
 	public boolean isEmpty() {
+//		System.out.println("chunkList size is "+chunkList.size());
 		if(chunkList==null || chunkAddrMap==null) return true;
+//		System.out.println("both nonnull, chunkList size is "+chunkList.size());
 		return chunkList.size()==0;
 	}
 	

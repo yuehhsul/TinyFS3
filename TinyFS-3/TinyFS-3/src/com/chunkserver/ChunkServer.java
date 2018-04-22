@@ -177,6 +177,7 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public FSReturnVals ReadFirstRecord(String chunkHandle, TinyRec rec){
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			System.out.println("Chunk is empty");
 			return FSReturnVals.RecDoesNotExist;
 		}
 
