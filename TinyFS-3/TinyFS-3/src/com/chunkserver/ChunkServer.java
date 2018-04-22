@@ -164,6 +164,8 @@ public class ChunkServer implements ChunkServerInterface {
 			currSlot += 1; //move on to next slot
 		}
 		
+		//Manage metadata
+		
 		return FSReturnVals.Success;
 	}
 	
@@ -172,7 +174,8 @@ public class ChunkServer implements ChunkServerInterface {
 			return FSReturnVals.RecDoesNotExist;
 		}
 
-		int firstRecLength = getRecordLength(chunkHandle, 0);	//Get record length of record 0, which is the first record
+		int firstSlot = getFirstSlotNumber(chunkHandle);
+		int firstRecLength = getRecordLength(chunkHandle, firstSlot);	//Get record length of the first valid record, which is the first record
 
 		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
 		rec.setPayload(firstRec); 
@@ -180,19 +183,39 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public FSReturnVals ReadLastRecord(String chunkHandle , TinyRec rec){
-		byte[] numRecs = readChunk(chunkHandle, 0, 4);
-		
-		byte [] firstRec;
-		if(ByteBuffer.wrap(numRecs).getInt() == 0) {
+		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
 			return FSReturnVals.RecDoesNotExist;
 		}
-		int numSlots = getNumOfSlots(chunkHandle);
-		int recordLen  = getRecordLength(chunkHandle, numSlots-1);
 		
-		int lastOffset = getOffsetFromSlot(chunkHandle, numSlots-1);
+		int lastSlot = getLastSlotNumber(chunkHandle);
+		int recordLen  = getRecordLength(chunkHandle, lastSlot);
+		int lastOffset = getOffsetFromSlot(chunkHandle, lastSlot);
 		
 		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
 		return FSReturnVals.Success;
+	}
+	
+	public FSReturnVals ReadNextRecord(String chunkHandle, TinyRec rec, boolean changedChunk, int currSlot) {
+		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+			return FSReturnVals.RecDoesNotExist;
+		}
+		
+		//Case1: hasn't changed chunk, get next slot
+		if(!changedChunk) {
+			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
+			int recordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
+			int recordLen = getRecordLength(chunkHandle, nextSlot);
+			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+			return FSReturnVals.Success;
+		}
+		//Case2: changed chunk, read first record using first valid slot
+		//Note: this chunkhandle is already the new chunkHandle
+		else {
+			int firstSlotNum = getFirstSlotNumber(chunkHandle);
+			int recordLen = getRecordLength(chunkHandle, firstSlotNum);
+			rec.setPayload(readChunk(chunkHandle, 12, recordLen));
+			return FSReturnVals.Success;
+		}
 	}
 	
 	/**
@@ -207,11 +230,14 @@ public class ChunkServer implements ChunkServerInterface {
 			nextSlotOffset = getNextAvailableIndex(chunkHandle);
 			return nextSlotOffset - 12;
 		}
+		else if(getLastSlotNumber(chunkHandle)==currSlot) {	//Check if this is the slot of the last record (Not necessarily the last slot)
+			nextSlotOffset = getNextAvailableIndex(chunkHandle);
+		}
 		else {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			nextSlotOffset = getOffsetFromSlot(chunkHandle, nextSlot); //gets offset in second slot
-			return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
 		}
+		return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
 	}
 	
 	/**
@@ -222,7 +248,6 @@ public class ChunkServer implements ChunkServerInterface {
 		byte[] recordNum = readChunk(chunkHandle, 0, 4);
 		int numOfRecords = ByteBuffer.wrap(recordNum).getInt();
 		return numOfRecords;
->>>>>>> 40436f8b85d2d971adc7a7ba8e4b2b8cee2de2ac
 	}
 	
 	/**
@@ -233,6 +258,56 @@ public class ChunkServer implements ChunkServerInterface {
 		byte[] slotNum = readChunk(chunkHandle, 4, 4);
 		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
 		return numOfSlots;
+	}
+	
+	/**
+	 * Helper:
+	 * Returns the number of invalid slots
+	 */
+	private int getNumOfInvalidSlots(String chunkHandle) {
+		int count = 0;
+		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
+			if(getOffsetFromSlot(chunkHandle, i)<0) {	//Invalid slot
+				count += 1;
+			}
+		}
+		return count;
+	}
+	
+	/**
+	 * Helper:
+	 * Returns the number of valid slots
+	 */
+	private int getNumOfValidSlots(String chunkHandle) {
+		return getNumOfSlots(chunkHandle)-getNumOfInvalidSlots(chunkHandle);
+	}
+	
+	/**
+	 * Helper:
+	 * Returns last valid slot
+	 */
+	private int getLastSlotNumber(String chunkHandle) {
+		int currSlot = -1;
+		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
+			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Invalid slot
+				currSlot = i;
+			}
+		}
+		return currSlot;
+	}
+	
+	/**
+	 * Helper:
+	 * Returns first valid slot
+	 */
+	private int getFirstSlotNumber(String chunkHandle) {
+		int currSlot = -1;
+		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
+			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Invalid slot
+				return currSlot;
+			}
+		}
+		return currSlot;
 	}
 	
 	/**
