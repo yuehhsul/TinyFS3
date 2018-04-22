@@ -119,6 +119,10 @@ public class ChunkServer implements ChunkServerInterface {
 		int offset = ChunkSize-(slot+1)*4;
 		Boolean pass = writeChunk(chunkHandle, payload, offset);
 		if(pass) {
+			//Manage metadata
+			setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)+1);
+			setNumOfSlots(chunkHandle, getNumOfSlots(chunkHandle)+1);
+			setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)+payload.length);
 			return FSReturnVals.Success;
 		}
 		return FSReturnVals.Fail;
@@ -165,6 +169,8 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		
 		//Manage metadata
+		setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)-1);
+		setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)-deletedLength);
 		
 		return FSReturnVals.Success;
 	}
@@ -252,12 +258,32 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	/**
 	 * Helper:
+	 * Sets the total number of records in this chunk
+	 */
+	private void setNumOfRecords(String chunkHandle, int num) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(num);
+		writeChunk(chunkHandle, bb.array(), 0);
+	}
+	
+	/**
+	 * Helper:
 	 * Returns the total number of slots in this chunk
 	 */
 	private int getNumOfSlots(String chunkHandle) {
 		byte[] slotNum = readChunk(chunkHandle, 4, 4);
 		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
 		return numOfSlots;
+	}
+	
+	/**
+	 * Helper:
+	 * Sets the total number of slots in this chunk
+	 */
+	private void setNumOfSlots(String chunkHandle, int num) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(num);
+		writeChunk(chunkHandle, bb.array(), 4);
 	}
 	
 	/**
@@ -318,6 +344,16 @@ public class ChunkServer implements ChunkServerInterface {
 		byte[] nextIndexBA = readChunk(chunkHandle, 8, 4);
 		int nextIndex = ByteBuffer.wrap(nextIndexBA).getInt();
 		return nextIndex;
+	}
+	
+	/**
+	 * Helper:
+	 * Sets the next available index(offset) in the chunk to store a record
+	 */
+	private void setNextAvailableIndex(String chunkHandle, int num) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(num);
+		writeChunk(chunkHandle, bb.array(), 8);
 	}
 	
 	/**
