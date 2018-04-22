@@ -160,7 +160,7 @@ public class ChunkServer implements ChunkServerInterface {
 		int lastShiftIndex = ChunkSize - numOfSlots*4 - 1;
 		
 		if(lastShiftIndex > firstShiftIndex) {
-			byte[] toShiftBA = readChunk(chunkHandle, firstShiftIndex, firstShiftIndex-lastShiftIndex+1);
+			byte[] toShiftBA = readChunk(chunkHandle, firstShiftIndex, lastShiftIndex-firstShiftIndex+1);
 			writeChunk(chunkHandle, toShiftBA, toDeleteIndex);
 		}
 		//Update all offsets so that they point to the correct location in the chunk
@@ -238,6 +238,7 @@ public class ChunkServer implements ChunkServerInterface {
 		
 		//Case1: hasn't changed chunk, get next slot
 		if(!changedChunk) {
+//			System.out.println("no change");
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			int recordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
 			int recordLen = getRecordLength(chunkHandle, nextSlot);
@@ -249,10 +250,11 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case2: changed chunk, read first record using first valid slot
 		//Note: this chunkhandle is already the new chunkHandle
 		else {
+			System.out.println("change to:"+nextChunkHandle);
 			int firstSlotNum = getFirstSlotNumber(nextChunkHandle);
 			int recordLen = getRecordLength(nextChunkHandle, firstSlotNum);
 			rec.setPayload(readChunk(nextChunkHandle, 12, recordLen));
-			RID rid = new RID(chunkHandle, firstSlotNum, recordLen);
+			RID rid = new RID(nextChunkHandle, firstSlotNum, recordLen);
 			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
@@ -302,24 +304,13 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	private int getRecordLength(String chunkHandle, int currSlot) {
 		int nextSlotOffset = -1;
-		//Check if there is only one record
-//		int numOfSlots = getNumOfSlots(chunkHandle);
-		int numOfRecords = getNumOfRecords(chunkHandle);
-		if(numOfRecords==1) {
-			System.out.println("Only 1 record");
+		
+		if(getLastSlotNumber(chunkHandle)==currSlot) {	//Check if this is the slot of the last record (Not necessarily the last slot)
 			nextSlotOffset = getNextAvailableIndex(chunkHandle);
-			return nextSlotOffset - 12;
-		}
-		else if(getLastSlotNumber(chunkHandle)==currSlot) {	//Check if this is the slot of the last record (Not necessarily the last slot)
-			nextSlotOffset = getNextAvailableIndex(chunkHandle);
-//			System.out.println("getNext got: "+nextSlotOffset);
-			System.out.println("-------is last slot--------");
 		}
 		else {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			nextSlotOffset = getOffsetFromSlot(chunkHandle, nextSlot); //gets offset in second slot
-			System.out.println("nextSlot got: "+nextSlot);
-			System.out.println("-------is middle slot--------");
 		}
 		System.out.println("nextSlotOffset="+nextSlotOffset+" getOffsetFromSlot(curr)="+getOffsetFromSlot(chunkHandle, currSlot));
 		return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
@@ -482,11 +473,11 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Returns the next slot where its stored value is not -1 (Valid slot)
 	 */
 	private int getNextValidSlot(String chunkHandle, int currSlot) {
-		System.out.println("in currSlot =" + currSlot);
+//		System.out.println("in currSlot =" + currSlot);
 		int totalSlots = getNumOfSlots(chunkHandle);
 		currSlot += 1;
 		while(currSlot<totalSlots) {
-			System.out.println("currSlot is "+currSlot);
+//			System.out.println("currSlot is "+currSlot);
 			int offset = getOffsetFromSlot(chunkHandle, currSlot);
 			if(offset>0) {
 				return currSlot;

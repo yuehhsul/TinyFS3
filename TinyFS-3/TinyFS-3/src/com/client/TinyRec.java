@@ -8,8 +8,6 @@ public class TinyRec {
 		return payload;
 	}
 	public void setPayload(byte[] p) {
-		System.out.println("reached set payload, p size = "+p.length);
-		
 		payload = p;
 	}
 	

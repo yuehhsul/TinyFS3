@@ -83,7 +83,7 @@ public class UnitTest4 {
 		int cntr = 1;
 		ArrayList<RID> vect = new ArrayList<RID>();
 		while (r1.getRID() != null){
-			System.out.println("r1.getRID is not null");
+//			System.out.println("r1.getRID is not null");
 			TinyRec r2 = new TinyRec();
 			FSReturnVals retval = crec.ReadNextRecord(fh, r1.getRID(), r2);
 			//if(retval != FSReturnVals.Success){
@@ -100,6 +100,7 @@ public class UnitTest4 {
 				}
 				r1 = r2;
 				cntr++;
+				System.out.println("COUNTER ISSSSS "+cntr);
 			} else {
 				r1.setRID(null);
 			}
