@@ -9,9 +9,11 @@ import com.client.ClientFS.FSReturnVals;
 public class ClientRec {
 	
 	ChunkServer cs;
+	ClientFS cfs;
 
 	public ClientRec() {
 		cs = new ChunkServer();
+		cfs = new ClientFS();
 	}
 	/**
 	 * Appends a record to the open file as specified by ofh Returns BadHandle
@@ -31,14 +33,19 @@ public class ClientRec {
 		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
 			return FSReturnVals.BadRecID;
 		}
-		if(payload.length > ChunkServer.ChunkSize) {
-			return FSReturnVals.RecordTooLong;
-		}
+//		if(payload.length > ChunkServer.ChunkSize) {
+//			return FSReturnVals.RecordTooLong;
+//		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size()-1);
 		if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.Fail) {
 			RecordID = null;
 			return FSReturnVals.Fail;
+		}
+		else if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.RecordTooLong) {
+			ofh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+			AppendRecord(ofh, payload, RecordID);
+//			return FSReturnVals.RecordTooLong;
 		}
 		return FSReturnVals.Success;
 	}

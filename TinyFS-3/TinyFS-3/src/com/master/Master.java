@@ -242,6 +242,51 @@ public class Master {
 		fileHandleMap.put(fileFullName, chunkList);
 		return FSReturnVals.Success;
 	}
+	
+	public FileHandle createNewChunk(String tgtdir, String filename) {
+		if(tgtdir.length()>2) {
+			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
+		}
+		
+		//Check tgtdir directory exists
+		if(!fileNSMap.containsKey(tgtdir)) {
+			System.out.println("CreateChunk: tgtdir does not exist");
+			return null;
+		}
+		
+		ArrayList<String> dirContent = fileNSMap.get(tgtdir);
+		String fileFullName = tgtdir + "/" + filename;
+		if(!dirContent.contains(fileFullName)) {
+			System.out.println("CreateChunk: no such file");
+			return null;
+		}
+		
+		//Call createChunk on cs
+		String chunkHandle = cs.createChunk();
+		
+//		//Add file to ns
+//		dirContent.add(fileFullName);
+//		fileNSMap.put(tgtdir, dirContent);
+		//Add file to fileHandleMap
+		ArrayList<String> chunkList = fileHandleMap.get(filename);
+		chunkList.add(chunkHandle);
+		fileHandleMap.put(filename, chunkList);
+		//Create filehandle
+//		ArrayList<String> list = fileHandleMap.get(filename);
+		Map<String, String> map = new HashMap<String, String>();
+		for(int i=0;i<chunkList.size();i++) {
+			String chunkhandle = chunkList.get(i);
+			String chunkAddr = chunkAddrMap.get(chunkhandle);
+			map.put(chunkhandle, chunkAddr);
+		}
+		String dir = filename;
+		int occurrences = filename.length() - filename.replace("/", "").length();
+		if(occurrences>1) {
+			dir = filename.substring(0, filename.lastIndexOf("/"));
+		}
+		FileHandle fh = new FileHandle(map, chunkList, dir, filename);
+		return fh;
+	}
 
 	/**
 	 * Deletes the specified filename from the tgtdir Returns SrcDirNotExistent
@@ -294,7 +339,12 @@ public class Master {
 			String chunkAddr = chunkAddrMap.get(chunkHandle);
 			fileChunkAddrMap.put(chunkHandle, chunkAddr);
 		}
-		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList);
+		String dir = FilePath;
+		int occurrences = FilePath.length() - FilePath.replace("/", "").length();
+		if(occurrences>1) {
+			dir = FilePath.substring(0, FilePath.lastIndexOf("/"));
+		}
+		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList, dir, FilePath);
 		ofh = fh;
 		return FSReturnVals.Success;
 	}

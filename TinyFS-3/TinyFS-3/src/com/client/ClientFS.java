@@ -116,5 +116,9 @@ public class ClientFS {
 		
 		return master.CloseFile(ofh);
 	}
+	
+	public FileHandle createNewChunk(String tgtdir, String filename) {
+		return master.createNewChunk(tgtdir, filename);
+	}
 
 }

@@ -7,19 +7,31 @@ import java.util.Map;
 public class FileHandle {
 	private static Map<String, String> chunkAddrMap; //map of chunkhandle to the chunkServer
 	private static ArrayList<String> chunkList; //list of the chunkHandles
+	private static String fileName;
+	private static String dir;
 	
 	public FileHandle() {
 		chunkAddrMap = new HashMap<String, String>();
 		chunkList = new ArrayList<String>();
 	}
 	
-	public FileHandle(Map<String, String> map, ArrayList<String> list) {
+	public FileHandle(Map<String, String> map, ArrayList<String> list, String parentDir, String filename) {
 		if(map==null || list==null) {
 			System.out.println("FileHandle constructor cannot have null map or list");
 			return;
 		}
 		chunkAddrMap = map;
 		chunkList = list;
+		fileName = filename;
+		dir = parentDir;
+	}
+	
+	public String getDir() {
+		return dir;
+	}
+	
+	public String getName() {
+		return fileName;
 	}
 	
 	public ArrayList<String> getChunkList() {

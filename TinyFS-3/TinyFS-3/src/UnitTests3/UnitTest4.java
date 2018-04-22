@@ -54,6 +54,7 @@ public class UnitTest4 {
 			}
 			RID rid = new RID();
 			FSReturnVals afs = crec.AppendRecord(fh, payload, rid);
+//			System.out.println("---------Append--------");
 			if(afs != FSReturnVals.Success ){
 				System.out.println(afs);
 				System.out.println("Unit test 4 result: fail!");
@@ -71,6 +72,7 @@ public class UnitTest4 {
 		}
 		TinyRec r1 = new TinyRec();
 		FSReturnVals retRR = crec.ReadFirstRecord(fh, r1);
+		System.out.println("r1 payload size = "+r1.getPayload().length);
 		if(retRR != FSReturnVals.Success ){
 			System.out.println(retRR);
 			System.out.println("Unit test 4 result: fail!");
@@ -85,6 +87,7 @@ public class UnitTest4 {
 			//if(retval != FSReturnVals.Success){
 			if(r2.getRID() != null){
 				byte[] head = new byte[4];
+				System.out.println(r2.getPayload().length);
 				System.arraycopy(r2.getPayload(), 0, head, 0, 4);
 				int value = ((head[0] & 0xFF) << 24) | ((head[1] & 0xFF) << 16)
 				        | ((head[2] & 0xFF) << 8) | (head[3] & 0xFF);
