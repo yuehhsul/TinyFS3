@@ -41,18 +41,19 @@ public class ClientRec {
 //		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size()-1);
-		if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.Fail) {
+		FSReturnVals retVal = cs.AppendRecord(lastChunk, payload, RecordID);
+		if(retVal==FSReturnVals.Fail) {
 			RecordID = null;
 			return FSReturnVals.Fail;
 		}
-		else if(cs.AppendRecord(lastChunk, payload, RecordID)==FSReturnVals.RecordTooLong) {
+		else if(retVal==FSReturnVals.RecordTooLong) {
 			System.out.println("creating new chunk");
 			System.out.println("ofhgetdir = "+ofh.getDir());
 			ofh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 			return AppendRecord(ofh, payload, RecordID);
 //			return FSReturnVals.RecordTooLong;
 		}
-		return FSReturnVals.Success;
+		return retVal;
 	}
 
 	/**

@@ -113,7 +113,9 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Example usage: AppendRecord(FH1, obama, RecID1)
 	 */
 	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
+		System.out.println("Still "+getEmptySpace(chunkHandle)+" bytes left");
 		if(payload.length>getEmptySpace(chunkHandle)) {
+			System.out.println("Append: Record to long!!!");
 			return FSReturnVals.RecordTooLong;
 		}
 		int slot = getNumOfSlots(chunkHandle);

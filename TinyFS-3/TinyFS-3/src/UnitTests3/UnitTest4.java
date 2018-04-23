@@ -55,7 +55,7 @@ public class UnitTest4 {
 			}
 			RID rid = new RID();
 			FSReturnVals afs = crec.AppendRecord(fh, payload, rid);
-			System.out.println("---------Append--------");
+			System.out.println("---------Append-- : "+i+"-----");
 			if(afs != FSReturnVals.Success ){
 				System.out.println(afs);
 				System.out.println("Unit test 4 result: fail!");
@@ -96,6 +96,7 @@ public class UnitTest4 {
 				
 				//Store r2 in a vector
 				if(value % 2 != 0){
+					System.out.println("r2: "+r2.getRID().getSlotNumber()+" in "+r2.getRID().getChunkHandle());
 					vect.add(r2.getRID());
 				}
 				r1 = r2;
@@ -106,14 +107,19 @@ public class UnitTest4 {
 			}
 		}
 		
+//		System.out.println("vect(3): "+vect.get(3).getSlotNumber()+" in "+vect.get(3).getChunkHandle());
+		
 		System.out.println(TestName + "Delete the odd numbered records using their first four bytes.");
 		//Iterate the vector and delete the RIDs stored in it
+		System.out.println("vector size = "+vect.size());
 		for(int i = 0; i < vect.size(); i++){
+			System.out.println("i = "+i+" del: "+vect.get(i).getSlotNumber()+" in "+vect.get(i).getChunkHandle());
 			fsrv = crec.DeleteRecord(fh, vect.get(i));
 			if(fsrv != FSReturnVals.Success){
 				System.out.println("Unit test 4 result: failed to delete the record!");
 				return;
 			}
+			System.out.println("i = "+i+" beendel: "+vect.get(i).getSlotNumber()+" in "+vect.get(i).getChunkHandle());
 		}
 		fsrv = cfs.CloseFile(fh);
 		if(cntr != NumRecs){
@@ -145,6 +151,13 @@ public class UnitTest4 {
 		}
 		fsrv = cfs.CloseFile(fh);
 		System.out.println(TestName + "Success!");
+	}
+	
+	private int getValueFromRecord(byte[] ba) {
+		byte[] head = new byte[4];
+		System.arraycopy(ba, 0, head, 0, 4);
+		return ((head[0] & 0xFF) << 24) | ((head[1] & 0xFF) << 16)
+		        | ((head[2] & 0xFF) << 8) | (head[3] & 0xFF);
 	}
 
 }

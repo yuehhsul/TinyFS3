@@ -1,8 +1,8 @@
 package com.client;
 
 public class TinyRec {
-	private static byte[] payload = null;
-	private static RID ID = null;
+	private byte[] payload = null;
+	private RID ID = null;
 	
 	public byte[] getPayload() {
 		return payload;
