@@ -113,9 +113,9 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Example usage: AppendRecord(FH1, obama, RecID1)
 	 */
 	public FSReturnVals AppendRecord(String chunkHandle, byte[] payload, RID RecordID) {
-		System.out.println("Still "+getEmptySpace(chunkHandle)+" bytes left");
+//		System.out.println("Still "+getEmptySpace(chunkHandle)+" bytes left");
 		if(payload.length>getEmptySpace(chunkHandle)) {
-			System.out.println("Append: Record to long!!!");
+			System.out.println("Append: Record to long");
 			return FSReturnVals.RecordTooLong;
 		}
 		int slot = getNumOfSlots(chunkHandle);
@@ -166,7 +166,7 @@ public class ChunkServer implements ChunkServerInterface {
 			writeChunk(chunkHandle, toShiftBA, toDeleteIndex);
 			byte[] after = readChunk(chunkHandle, toDeleteIndex, toShiftBA.length);
 			if(!Arrays.equals(toShiftBA, after)) {
-				System.out.println("ERRRRRRRRORRRRRRRRRRRRRRR---------------");
+				System.out.println("array shift failed");
 				return FSReturnVals.Fail;
 			}
 		}
@@ -189,12 +189,12 @@ public class ChunkServer implements ChunkServerInterface {
 		setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)-1);
 		setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)-deletedLength);
 		
-		System.out.println("offset at del slot is "+getOffsetFromSlot(chunkHandle, RecordID.getSlotNumber()));
+//		System.out.println("offset at del slot is "+getOffsetFromSlot(chunkHandle, RecordID.getSlotNumber()));
 		
 		RecordID = null;
 		
-		System.out.println("numRecs is "+getNumOfRecords(chunkHandle));
-		System.out.println("nextavail is "+getNextAvailableIndex(chunkHandle));
+//		System.out.println("numRecs is "+getNumOfRecords(chunkHandle));
+//		System.out.println("nextavail is "+getNextAvailableIndex(chunkHandle));
 		
 		return FSReturnVals.Success;
 	}
@@ -206,13 +206,13 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 
 		int firstSlot = getFirstSlotNumber(chunkHandle);
-		System.out.println("first slot num = "+firstSlot);
+//		System.out.println("first slot num = "+firstSlot);
 		int firstRecLength = getRecordLength(chunkHandle, firstSlot);	//Get record length of the first valid record, which is the first record
 
-		System.out.println("---First record Length is "+firstRecLength+"---");
+//		System.out.println("---First record Length is "+firstRecLength+"---");
 		
 		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
-		System.out.println("length = "+firstRecLength);
+//		System.out.println("length = "+firstRecLength);
 		rec.setPayload(firstRec); 
 		RID rid = new RID(chunkHandle, firstSlot, firstRecLength);
 		rec.setRID(rid);
@@ -327,7 +327,7 @@ public class ChunkServer implements ChunkServerInterface {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			nextSlotOffset = getOffsetFromSlot(chunkHandle, nextSlot); //gets offset in second slot
 		}
-		System.out.println("nextSlotOffset="+nextSlotOffset+" getOffsetFromSlot(curr)="+getOffsetFromSlot(chunkHandle, currSlot));
+//		System.out.println("nextSlotOffset="+nextSlotOffset+" getOffsetFromSlot(curr)="+getOffsetFromSlot(chunkHandle, currSlot));
 		return nextSlotOffset - getOffsetFromSlot(chunkHandle, currSlot);
 	}
 	
@@ -425,9 +425,9 @@ public class ChunkServer implements ChunkServerInterface {
 	private int getFirstSlotNumber(String chunkHandle) {
 //		int currSlot = -1;
 		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
-			System.out.println("Slot = "+i+" has offset = "+getOffsetFromSlot(chunkHandle, i));
+//			System.out.println("Slot = "+i+" has offset = "+getOffsetFromSlot(chunkHandle, i));
 			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Valid slot
-				System.out.println("got first slot");
+//				System.out.println("got first slot");
 				return i;
 			}
 		}

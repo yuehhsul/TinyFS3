@@ -36,9 +36,7 @@ public class ClientRec {
 		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
 			return FSReturnVals.BadRecID;
 		}
-//		if(payload.length > ChunkServer.ChunkSize) {
-//			return FSReturnVals.RecordTooLong;
-//		}
+
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String lastChunk = chunkList.get(chunkList.size()-1);
 		FSReturnVals retVal = cs.AppendRecord(lastChunk, payload, RecordID);
@@ -51,7 +49,6 @@ public class ClientRec {
 			System.out.println("ofhgetdir = "+ofh.getDir());
 			ofh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 			return AppendRecord(ofh, payload, RecordID);
-//			return FSReturnVals.RecordTooLong;
 		}
 		return retVal;
 	}
@@ -198,7 +195,6 @@ public class ClientRec {
 			firstChunk = true;
 		}
 		String prevChunkHandle = ofh.getPrevChunk(chunkHandle);
-		if(prevChunkHandle==null) System.out.println("NULLLL");
 		return cs.ReadPrevRecord(chunkHandle, prevChunkHandle, rec, firstChunk, slotNum);
 	}
 

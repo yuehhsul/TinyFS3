@@ -244,12 +244,6 @@ public class Master {
 	}
 	
 	public FileHandle createNewChunk(String tgtdir, String filename) {
-//		if(tgtdir.length()>2) {
-//			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
-//		}
-		
-//		System.out.println("subtgtdir = "+tgtdir);
-		
 		//Check tgtdir directory exists
 		if(!fileNSMap.containsKey(tgtdir)) {
 			System.out.println("CreateChunk: tgtdir does not exist");
@@ -257,7 +251,6 @@ public class Master {
 		}
 		
 		ArrayList<String> dirContent = fileNSMap.get(tgtdir);
-//		String fileFullName = tgtdir + "/" + filename;
 		if(!dirContent.contains(filename)) {
 			System.out.println("CreateChunk: no such file");
 			return null;
@@ -266,15 +259,9 @@ public class Master {
 		//Call createChunk on cs
 		String chunkHandle = cs.createChunk();
 		
-//		//Add file to ns
-//		dirContent.add(fileFullName);
-//		fileNSMap.put(tgtdir, dirContent);
-		//Add file to fileHandleMap
 		ArrayList<String> chunkList = fileHandleMap.get(filename);
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(filename, chunkList);
-		//Create filehandle
-//		ArrayList<String> list = fileHandleMap.get(filename);
 		Map<String, String> map = new HashMap<String, String>();
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkhandle = chunkList.get(i);
