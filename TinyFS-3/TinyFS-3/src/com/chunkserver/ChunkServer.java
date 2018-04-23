@@ -164,9 +164,15 @@ public class ChunkServer implements ChunkServerInterface {
 		if(lastShiftIndex > firstShiftIndex) {
 			byte[] toShiftBA = readChunk(chunkHandle, firstShiftIndex, lastShiftIndex-firstShiftIndex+1);
 			writeChunk(chunkHandle, toShiftBA, toDeleteIndex);
+			byte[] after = readChunk(chunkHandle, toDeleteIndex, toShiftBA.length);
+			if(!Arrays.equals(toShiftBA, after)) {
+				System.out.println("ERRRRRRRRORRRRRRRRRRRRRRR---------------");
+				return FSReturnVals.Fail;
+			}
 		}
+		
 		//Update all offsets so that they point to the correct location in the chunk
-		int currSlot = RecordID.getRecordLength();
+		int currSlot = RecordID.getSlotNumber();
 		setOffsetFromSlot(chunkHandle, currSlot, -1);
 		int deletedLength = RecordID.getRecordLength();
 		currSlot+=1; //move on to next slot
@@ -183,7 +189,12 @@ public class ChunkServer implements ChunkServerInterface {
 		setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)-1);
 		setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)-deletedLength);
 		
+		System.out.println("offset at del slot is "+getOffsetFromSlot(chunkHandle, RecordID.getSlotNumber()));
+		
 		RecordID = null;
+		
+		System.out.println("numRecs is "+getNumOfRecords(chunkHandle));
+		System.out.println("nextavail is "+getNextAvailableIndex(chunkHandle));
 		
 		return FSReturnVals.Success;
 	}

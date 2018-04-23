@@ -141,6 +141,7 @@ public class UnitTest4 {
 				int value = ((head[0] & 0xFF) << 24) | ((head[1] & 0xFF) << 16)
 				        | ((head[2] & 0xFF) << 8) | (head[3] & 0xFF);
 				if(value % 2 != 0){
+					System.out.println("failed r2: "+value+" with "+r2.getRID().getSlotNumber()+" in "+r2.getRID().getChunkHandle());
 					System.out.println("Unit test 4 result: fail!  Found an odd numbered record with value " + value + ".");
 		    		return;
 				}
