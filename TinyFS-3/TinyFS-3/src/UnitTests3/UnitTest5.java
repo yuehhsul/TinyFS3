@@ -38,9 +38,15 @@ public class UnitTest5 {
 		//get the file handle first
 		FileHandle fh = new FileHandle();
 		FSReturnVals ofd = cfs.OpenFile("/" + dir1 + "/emp1", fh);
+		if ( ofd != FSReturnVals.Success ){
+			System.out.println("Unit test 5 result: fail!");
+    		return;
+		}
 		byte[] payload = null;
 		int intSize = Integer.SIZE / Byte.SIZE;	// 4 bytes
 		ClientRec crec = new ClientRec();
+		crec.init(cfs);
+		
 		for (int i = 0; i < NumRecs; i++){
 			payload = new byte[104];
 			byte[] ValInBytes = ByteBuffer.allocate(intSize).putInt(i).array();
@@ -56,6 +62,10 @@ public class UnitTest5 {
 		ofd = cfs.OpenFile("/" + dir1 + "/emp1", fh);
 		TinyRec r1 = new TinyRec();
 		FSReturnVals retRR = crec.ReadLastRecord(fh, r1);
+		if ( retRR != FSReturnVals.Success ){
+			System.out.println("Unit test 5 result: fail!");
+    		return;
+		}
 		int cntr = 1;
 		ArrayList<RID> vect = new ArrayList<RID>();
 		while (r1.getRID() != null){

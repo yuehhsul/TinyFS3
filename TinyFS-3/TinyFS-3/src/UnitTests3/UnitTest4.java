@@ -101,7 +101,7 @@ public class UnitTest4 {
 				}
 				r1 = r2;
 				cntr++;
-				System.out.println("COUNTER ISSSSS "+cntr);
+//				System.out.println("COUNTER ISSSSS "+cntr);
 			} else {
 				r1.setRID(null);
 			}
@@ -152,13 +152,6 @@ public class UnitTest4 {
 		}
 		fsrv = cfs.CloseFile(fh);
 		System.out.println(TestName + "Success!");
-	}
-	
-	private int getValueFromRecord(byte[] ba) {
-		byte[] head = new byte[4];
-		System.arraycopy(ba, 0, head, 0, 4);
-		return ((head[0] & 0xFF) << 24) | ((head[1] & 0xFF) << 16)
-		        | ((head[2] & 0xFF) << 8) | (head[3] & 0xFF);
 	}
 
 }

@@ -291,6 +291,7 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case1: hasn't changed chunk, get prev slot
 		if(!changedChunk) {
 			int prevSlot = getPrevValidSlot(chunkHandle, currSlot);
+//			System.out.println("curr:"+currSlot+" prev:"+prevSlot);
 			int recordOffset = getOffsetFromSlot(chunkHandle, prevSlot);
 			int recordLen = getRecordLength(chunkHandle, prevSlot);
 			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
@@ -301,11 +302,12 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case2: changed chunk, read last record using last valid slot
 		//Note: this chunkhandle is already the new chunkHandle
 		else {
+			System.out.println("change to:"+prevChunkHandle);
 			int lastSlotNum = getLastSlotNumber(prevChunkHandle);
 			int lastSlotOffset = getOffsetFromSlot(prevChunkHandle, lastSlotNum);
 			int recordLen = getRecordLength(prevChunkHandle, lastSlotNum);
 			rec.setPayload(readChunk(prevChunkHandle, lastSlotOffset, recordLen));
-			RID rid = new RID(chunkHandle, lastSlotNum, recordLen);
+			RID rid = new RID(prevChunkHandle, lastSlotNum, recordLen);
 			rec.setRID(rid);
 			return FSReturnVals.Success;
 		}
@@ -409,7 +411,7 @@ public class ChunkServer implements ChunkServerInterface {
 	private int getLastSlotNumber(String chunkHandle) {
 		int currSlot = -1;
 		for(int i=0;i<getNumOfSlots(chunkHandle);i++) {
-			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Invalid slot
+			if(getOffsetFromSlot(chunkHandle, i)>0) {	//Valid slot
 				currSlot = i;
 			}
 		}
@@ -505,13 +507,13 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Returns the prev slot where its stored value is not -1 (Valid slot)
 	 */
 	private int getPrevValidSlot(String chunkHandle, int currSlot) {
-		currSlot += 1;
+		currSlot -= 1;
 		while(currSlot>=0) {
 			int offset = getOffsetFromSlot(chunkHandle, currSlot);
 			if(offset>0) {
 				return currSlot;
 			}
-			currSlot += 1;
+			currSlot -= 1;
 		}
 		return -1;
 	}

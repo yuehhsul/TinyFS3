@@ -197,8 +197,8 @@ public class ClientRec {
 		if(ofh.isFirstChunk(chunkHandle)) {
 			firstChunk = true;
 		}
-		String prevChunkHandle = ofh.getNextChunk(chunkHandle);
-		
+		String prevChunkHandle = ofh.getPrevChunk(chunkHandle);
+		if(prevChunkHandle==null) System.out.println("NULLLL");
 		return cs.ReadPrevRecord(chunkHandle, prevChunkHandle, rec, firstChunk, slotNum);
 	}
 
