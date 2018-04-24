@@ -31,6 +31,7 @@ public class Master {
 	
 	//Boolean when recovering
 	private boolean isRecovering = false;
+	FileHandle fh;
 	
 	//Filepath to log dir
 	private static String logFilepath = "log/";
@@ -81,6 +82,29 @@ public class Master {
 		fileNSMap.put(fullPath, new ArrayList<String>());
 		System.out.println("CreateDir: directory creation successful");
 		
+		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			for(int i=0;i<3;i++) {
+				RID RecordID = new RID();
+				switch(i) {
+					case 0:	//append commanddtype
+						ByteBuffer bb = ByteBuffer.allocate(4);
+						bb.putInt(createDirCMD);
+						cs.AppendRecord(fh, bb.array(), RecordID);
+						break;
+					case 1:	//append argOne
+						byte[] srcBA = src.getBytes();
+						cs.AppendRecord(fh, srcBA, RecordID);
+						break;
+					case 2:
+						byte[] nameBA = dirname.getBytes();
+						cs.AppendRecord(fh, nameBA, RecordID);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
 	    return FSReturnVals.Success;
 	}
 
@@ -114,6 +138,30 @@ public class Master {
 			fileNSMap.put(src, parentContent);
 			fileNSMap.remove(fullPath);
 			System.out.println("directory deletion successful");
+			
+			if(!isRecovering) {	//Only write log records when not recovering namespaces
+				for(int i=0;i<3;i++) {
+					RID RecordID = new RID();
+					switch(i) {
+						case 0:	//append commanddtype
+							ByteBuffer bb = ByteBuffer.allocate(4);
+							bb.putInt(deleteDirCMD);
+							cs.AppendRecord(fh, bb.array(), RecordID);
+							break;
+						case 1:	//append argOne
+							byte[] srcBA = src.getBytes();
+							cs.AppendRecord(fh, srcBA, RecordID);
+							break;
+						case 2:
+							byte[] nameBA = dirname.getBytes();
+							cs.AppendRecord(fh, nameBA, RecordID);
+							break;
+						default:
+							break;
+					}
+				}
+			}
+			
 		    return FSReturnVals.DestDirExists;
 		}
 		
@@ -178,6 +226,30 @@ public class Master {
 		//Rename by removing and adding back new name
 		ArrayList<String> srcDirContent = fileNSMap.remove(src);
 		fileNSMap.put(NewName, srcDirContent);
+		
+		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			for(int i=0;i<3;i++) {
+				RID RecordID = new RID();
+				switch(i) {
+					case 0:	//append commanddtype
+						ByteBuffer bb = ByteBuffer.allocate(4);
+						bb.putInt(renameDirCMD);
+						cs.AppendRecord(fh, bb.array(), RecordID);
+						break;
+					case 1:	//append argOne
+						byte[] srcBA = src.getBytes();
+						cs.AppendRecord(fh, srcBA, RecordID);
+						break;
+					case 2:
+						byte[] nameBA = NewName.getBytes();
+						cs.AppendRecord(fh, nameBA, RecordID);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
 		return FSReturnVals.Success;
 	}
 
@@ -260,6 +332,30 @@ public class Master {
 		ArrayList<String> chunkList = new ArrayList<String>();
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(fileFullName, chunkList);
+		
+		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			for(int i=0;i<3;i++) {
+				RID RecordID = new RID();
+				switch(i) {
+					case 0:	//append commanddtype
+						ByteBuffer bb = ByteBuffer.allocate(4);
+						bb.putInt(createFileCMD);
+						cs.AppendRecord(fh, bb.array(), RecordID);
+						break;
+					case 1:	//append argOne
+						byte[] srcBA = tgtdir.getBytes();
+						cs.AppendRecord(fh, srcBA, RecordID);
+						break;
+					case 2:
+						byte[] nameBA = filename.getBytes();
+						cs.AppendRecord(fh, nameBA, RecordID);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
 		return FSReturnVals.Success;
 	}
 	
@@ -326,6 +422,30 @@ public class Master {
 		fileNSMap.put(tgtdir, dirContent);
 		//Remove from fileHandleMap
 		fileHandleMap.remove(fileFullName);
+		
+		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			for(int i=0;i<3;i++) {
+				RID RecordID = new RID();
+				switch(i) {
+					case 0:	//append commanddtype
+						ByteBuffer bb = ByteBuffer.allocate(4);
+						bb.putInt(deleteFileCMD);
+						cs.AppendRecord(fh, bb.array(), RecordID);
+						break;
+					case 1:	//append argOne
+						byte[] srcBA = tgtdir.getBytes();
+						cs.AppendRecord(fh, srcBA, RecordID);
+						break;
+					case 2:
+						byte[] nameBA = filename.getBytes();
+						cs.AppendRecord(fh, nameBA, RecordID);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+		
 		return FSReturnVals.Success;
 	}
 
@@ -383,7 +503,7 @@ public class Master {
 			}
 			Collections.sort(logList);
 
-			FileHandle fh = new FileHandle(logMap, logList, "", "");
+			fh = new FileHandle(logMap, logList, "", "");
 			
 			TinyRec r1 = new TinyRec();
 			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
