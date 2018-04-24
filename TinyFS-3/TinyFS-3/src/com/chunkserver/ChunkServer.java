@@ -28,8 +28,9 @@ import com.interfaces.ChunkServerInterface;
  */
 
 public class ChunkServer implements ChunkServerInterface {
-	final static String filePath = "csci485/";	//or C:\\newfile.txt
+	static String filePath = "csci485/";	//or C:\\newfile.txt
 	public final static String ClientConfigFile = "ClientConfig.txt";
+	private boolean isRecovering = false;
 	
 	//Used for the file system
 	public static long counter;
@@ -102,6 +103,24 @@ public class ChunkServer implements ChunkServerInterface {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			return false;
+		}
+	}
+	
+	public void readFromLog(boolean toLog) {
+		if(toLog) {
+			filePath = "log/";
+		}
+		else {
+			filePath = "csci485/";
+		}
+	}
+	
+	public void writeToLog(boolean toLog) {
+		if(toLog) {
+			filePath = "log/";
+		}
+		else {
+			filePath = "csci485/";
 		}
 	}
 	

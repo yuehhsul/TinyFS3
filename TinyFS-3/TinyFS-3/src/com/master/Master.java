@@ -30,7 +30,7 @@ public class Master {
 	public static final int deleteFileCMD = 1005;
 	
 	//Boolean when recovering
-	private boolean isRecovering = false;
+	private static boolean isRecovering = false;
 	FileHandle fh;
 	
 	//Filepath to log dir
@@ -44,6 +44,7 @@ public class Master {
 		fileHandleMap = new HashMap<String, ArrayList<String>>();
 		chunkAddrMap = new HashMap<String, String>();
 		cs = new ChunkServer();
+		this.logRecover();
 	}
 
 	/**
@@ -83,6 +84,8 @@ public class Master {
 		System.out.println("CreateDir: directory creation successful");
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			cs.writeToLog(true);
+			System.out.println("-----REACHED-----");
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
 				switch(i) {
@@ -103,6 +106,7 @@ public class Master {
 						break;
 				}
 			}
+			cs.writeToLog(false);
 		}
 		
 	    return FSReturnVals.Success;
@@ -140,6 +144,7 @@ public class Master {
 			System.out.println("directory deletion successful");
 			
 			if(!isRecovering) {	//Only write log records when not recovering namespaces
+				cs.writeToLog(true);
 				for(int i=0;i<3;i++) {
 					RID RecordID = new RID();
 					switch(i) {
@@ -160,6 +165,7 @@ public class Master {
 							break;
 					}
 				}
+				cs.writeToLog(false);
 			}
 			
 		    return FSReturnVals.DestDirExists;
@@ -228,6 +234,7 @@ public class Master {
 		fileNSMap.put(NewName, srcDirContent);
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			cs.writeToLog(true);
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
 				switch(i) {
@@ -248,6 +255,7 @@ public class Master {
 						break;
 				}
 			}
+			cs.writeToLog(false);
 		}
 		
 		return FSReturnVals.Success;
@@ -332,8 +340,10 @@ public class Master {
 		ArrayList<String> chunkList = new ArrayList<String>();
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(fileFullName, chunkList);
+		chunkAddrMap.put(chunkHandle, "csci485/");
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			cs.writeToLog(true);
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
 				switch(i) {
@@ -354,6 +364,7 @@ public class Master {
 						break;
 				}
 			}
+			cs.writeToLog(false);
 		}
 		
 		return FSReturnVals.Success;
@@ -378,6 +389,7 @@ public class Master {
 		ArrayList<String> chunkList = fileHandleMap.get(filename);
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(filename, chunkList);
+		chunkAddrMap.put(chunkHandle, "csci485/");
 		Map<String, String> map = new HashMap<String, String>();
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkhandle = chunkList.get(i);
@@ -424,6 +436,7 @@ public class Master {
 		fileHandleMap.remove(fileFullName);
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
+			cs.writeToLog(true);
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
 				switch(i) {
@@ -444,6 +457,7 @@ public class Master {
 						break;
 				}
 			}
+			cs.writeToLog(false);
 		}
 		
 		return FSReturnVals.Success;
@@ -489,17 +503,19 @@ public class Master {
 	}
 	
 	private void logRecover() {
+		isRecovering = true;
 		File dir = new File(logFilepath);
 		File[] fs = dir.listFiles();
 		if(fs.length == 0){
 			System.out.println("No log records to recover");
+			isRecovering = false;
 			return;
 		}else{
 			ArrayList<String> logList = new ArrayList<String>();
 			Map<String, String> logMap = new HashMap<String, String>();
 			for (int j=0; j < fs.length; j++) {
 				logList.add(fs[j].getName());
-				logMap.put(fs[j].getName(), "");
+				logMap.put(fs[j].getName(), "log/");
 			}
 			Collections.sort(logList);
 
@@ -509,6 +525,7 @@ public class Master {
 			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
 			if(retRR != FSReturnVals.Success ){
 				System.out.println("logRecover ReadFirstRecord Fail: "+retRR);
+				isRecovering = false;
 	    		return;
 			}
 
@@ -518,7 +535,9 @@ public class Master {
 			String argTwo = null;
 			while (r1.getRID() != null){
 				TinyRec r2 = new TinyRec();
+				cs.readFromLog(true);
 				cs.ReadNextRecord(fh, r1.getRID(), r2);
+				cs.readFromLog(false);
 				if(r2.getRID() != null){
 					//Get payload
 					byte[] instrBA = r2.getPayload();
@@ -535,16 +554,16 @@ public class Master {
 							if(cmdType>0 && argOne!=null && argTwo!=null) {
 								switch(cmdType) {
 									case createDirCMD:
-										master.CreateDir(argOne, argTwo);
+										this.CreateDir(argOne, argTwo);
 										break;
 									case deleteDirCMD:
-										master.DeleteDir(argOne, argTwo);
+										this.DeleteDir(argOne, argTwo);
 										break;
 									case renameDirCMD:
-										master.RenameDir(argOne, argTwo);
+										this.RenameDir(argOne, argTwo);
 										break;
 									case createFileCMD:
-										master.CreateFile(argOne, argTwo);
+										this.CreateFile(argOne, argTwo);
 										break;
 									case deleteFileCMD:
 										master.DeleteFile(argOne, argTwo);
@@ -563,6 +582,7 @@ public class Master {
 				}
 			}
 		}
+		isRecovering = false;
 	}
 	
 	public static void main(String args[])
@@ -570,7 +590,7 @@ public class Master {
 		//Create the hashmap (populate it)
 		//Accept client connections
 		master = new Master();
-		master.logRecover();
+//		master.logRecover();
 	}
 
 
