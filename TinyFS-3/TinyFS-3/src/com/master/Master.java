@@ -1,11 +1,15 @@
 package com.master;
 
 import com.client.FileHandle;
+import com.client.RID;
+import com.client.TinyRec;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +31,11 @@ public class Master {
 	
 	//Boolean when recovering
 	private boolean isRecovering = false;
+	
+	//Filepath to log dir
+	private static String logFilepath = "log/";
+	
+	private static Master master;
 	
 	public Master() {
 		fileNSMap = new HashMap<String, ArrayList<String>>();
@@ -360,14 +369,87 @@ public class Master {
 	}
 	
 	private void logRecover() {
-		
+		File dir = new File(logFilepath);
+		File[] fs = dir.listFiles();
+		if(fs.length == 0){
+			System.out.println("No log records to recover");
+			return;
+		}else{
+			ArrayList<String> logList = new ArrayList<String>();
+			Map<String, String> logMap = new HashMap<String, String>();
+			for (int j=0; j < fs.length; j++) {
+				logList.add(fs[j].getName());
+				logMap.put(fs[j].getName(), "");
+			}
+			Collections.sort(logList);
+
+			FileHandle fh = new FileHandle(logMap, logList, "", "");
+			
+			TinyRec r1 = new TinyRec();
+			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
+			if(retRR != FSReturnVals.Success ){
+				System.out.println("logRecover ReadFirstRecord Fail: "+retRR);
+	    		return;
+			}
+
+			int typeCounter = 0; //0 is cmd, 1 is first arg, 2 is second arg
+			int cmdType = -1;
+			String argOne = null;
+			String argTwo = null;
+			while (r1.getRID() != null){
+				TinyRec r2 = new TinyRec();
+				cs.ReadNextRecord(fh, r1.getRID(), r2);
+				if(r2.getRID() != null){
+					//Get payload
+					byte[] instrBA = r2.getPayload();
+					switch(typeCounter) {
+						case 0: //Get cmd
+							ByteBuffer bb = ByteBuffer.wrap(instrBA);
+							cmdType = bb.getInt();
+							break;
+						case 1: //Get first arg
+							argOne = (new String(instrBA)).toString();
+							break;
+						case 2: //Get second arg and execute if no error
+							argTwo = (new String(instrBA)).toString();
+							if(cmdType>0 && argOne!=null && argTwo!=null) {
+								switch(cmdType) {
+									case createDirCMD:
+										master.CreateDir(argOne, argTwo);
+										break;
+									case deleteDirCMD:
+										master.DeleteDir(argOne, argTwo);
+										break;
+									case renameDirCMD:
+										master.RenameDir(argOne, argTwo);
+										break;
+									case createFileCMD:
+										master.CreateFile(argOne, argTwo);
+										break;
+									case deleteFileCMD:
+										master.DeleteFile(argOne, argTwo);
+										break;
+									default:
+										break;
+								}
+							}
+							break;
+						default: 
+							break;
+					}
+					r1 = r2;
+				} else {
+					r1.setRID(null);
+				}
+			}
+		}
 	}
 	
 	public static void main(String args[])
 	{
 		//Create the hashmap (populate it)
 		//Accept client connections
-		Master master = new Master();
+		master = new Master();
 		master.logRecover();
 	}
 
