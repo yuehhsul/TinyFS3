@@ -86,6 +86,8 @@ public class ChunkServer implements ChunkServerInterface {
 		bb.putInt(0);
 		bb.putInt(12);
 		writeChunk(chunkHandle, bb.array(), 0);
+		System.out.println(chunkHandle+" reached has numRecs="+getNumOfRecords(chunkHandle));
+		
 	}
 	
 	/**
@@ -93,6 +95,7 @@ public class ChunkServer implements ChunkServerInterface {
 	 * The byte array size should be no greater than 4KB
 	 */
 	public boolean writeChunk(String ChunkHandle, byte[] payload, int offset) {
+//		System.out.println("Is writing to "+filePath);
 		try {
 			//If the file corresponding to ChunkHandle does not exist then create it before writing into it
 			RandomAccessFile raf = new RandomAccessFile(filePath + ChunkHandle, "rw");
@@ -107,6 +110,7 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public void readFromLog(boolean toLog) {
+		System.out.println("readfromlog: "+toLog);
 		if(toLog) {
 			filePath = "log/";
 		}
@@ -116,6 +120,7 @@ public class ChunkServer implements ChunkServerInterface {
 	}
 	
 	public void writeToLog(boolean toLog) {
+		System.out.println("wrritetolog: "+toLog);
 		if(toLog) {
 			filePath = "log/";
 		}
@@ -142,17 +147,24 @@ public class ChunkServer implements ChunkServerInterface {
 		if (RecordID == null) {	//TODO: ask if there is a mistake in the comment
 			return FSReturnVals.BadRecID;
 		}
+		System.out.println("filename = "+ofh.getName());
+		
 		ArrayList<String> chunkList = ofh.getChunkList();
-		String chunkHandle = chunkList.get(chunkList.size()-1);
+		System.out.println("chunklist size= "+chunkList.size());
+		String chunkHandle = chunkList.get(0);
+		if(chunkList.size()>1) {
+			chunkHandle = chunkList.get(chunkList.size()-1);
+		}
 		
 		if(payload.length>getEmptySpace(chunkHandle)) {
-			System.out.println("Append: Record to long");
+			System.out.println("Append: Record to long: "+payload.length+" "+getEmptySpace(chunkHandle));
 			return FSReturnVals.RecordTooLong;
 		}
 		int slot = getNumOfSlots(chunkHandle);
 		
 		int toWriteIndex = getNextAvailableIndex(chunkHandle);
 		boolean pass = writeChunk(chunkHandle, payload, toWriteIndex);
+		System.out.println("Writing to:"+filePath+" "+pass);
 		if(pass) {
 			setOffsetFromSlot(chunkHandle, slot, toWriteIndex);
 			//Set RID
@@ -253,7 +265,6 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String chunkHandle = chunkList.get(0);
-		
 		
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
 			System.out.println("Chunk is empty");
@@ -458,7 +469,11 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	private int getNumOfRecords(String chunkHandle) {
 		byte[] recordNum = readChunk(chunkHandle, 0, 4);
-		int numOfRecords = ByteBuffer.wrap(recordNum).getInt();
+		int numOfRecords = 0;
+		if(recordNum!=null) {
+			numOfRecords = ByteBuffer.wrap(recordNum).getInt();
+		}
+//		int numOfRecords = ByteBuffer.wrap(recordNum).getInt();
 		return numOfRecords;
 	}
 	

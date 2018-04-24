@@ -20,7 +20,7 @@ public class Master {
 	private static Map<String, ArrayList<String>>fileNSMap;
 	private static Map<String, ArrayList<String>>fileHandleMap;
 	private static Map<String, String> chunkAddrMap;
-	public ChunkServer cs;
+	ChunkServer cs;
 	
 	//Defined ints for log records
 	public static final int createDirCMD = 1001;
@@ -85,20 +85,22 @@ public class Master {
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
 			cs.writeToLog(true);
-			System.out.println("-----REACHED-----");
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
 				switch(i) {
 					case 0:	//append commanddtype
+//						System.out.println("Reached:"+i+" list size= "+fh.getChunkList().size());
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createDirCMD);
 						cs.AppendRecord(fh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
+						System.out.println("Reached:"+i);
 						byte[] srcBA = src.getBytes();
 						cs.AppendRecord(fh, srcBA, RecordID);
 						break;
 					case 2:
+						System.out.println("Reached:"+i);
 						byte[] nameBA = dirname.getBytes();
 						cs.AppendRecord(fh, nameBA, RecordID);
 						break;
@@ -330,6 +332,8 @@ public class Master {
 			return FSReturnVals.FileExists;
 		}
 		
+		System.out.println("fileFullname is "+fileFullName);
+		
 		//Call createChunk on cs
 		String chunkHandle = cs.createChunk();
 		
@@ -340,7 +344,8 @@ public class Master {
 		ArrayList<String> chunkList = new ArrayList<String>();
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(fileFullName, chunkList);
-		chunkAddrMap.put(chunkHandle, "csci485/");
+		System.out.println("putting "+chunkHandle+" in "+fileFullName);
+		chunkAddrMap.put(chunkHandle, "csci485");
 		
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
 			cs.writeToLog(true);
@@ -348,6 +353,7 @@ public class Master {
 				RID RecordID = new RID();
 				switch(i) {
 					case 0:	//append commanddtype
+						System.out.println("reached-----------------");
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createFileCMD);
 						cs.AppendRecord(fh, bb.array(), RecordID);
@@ -366,7 +372,7 @@ public class Master {
 			}
 			cs.writeToLog(false);
 		}
-		
+		System.out.println("Create file successful");
 		return FSReturnVals.Success;
 	}
 	
@@ -389,7 +395,7 @@ public class Master {
 		ArrayList<String> chunkList = fileHandleMap.get(filename);
 		chunkList.add(chunkHandle);
 		fileHandleMap.put(filename, chunkList);
-		chunkAddrMap.put(chunkHandle, "csci485/");
+		chunkAddrMap.put(chunkHandle, "csci485");
 		Map<String, String> map = new HashMap<String, String>();
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkhandle = chunkList.get(i);
@@ -506,21 +512,37 @@ public class Master {
 		isRecovering = true;
 		File dir = new File(logFilepath);
 		File[] fs = dir.listFiles();
+
+		System.out.println("logRecovering-----------------"+fs.length);
+
+		ArrayList<String> logList = new ArrayList<String>();
+		Map<String, String> logMap = new HashMap<String, String>();
 		if(fs.length == 0){
+			cs.writeToLog(true);
+			this.CreateDir("/", "log");
+			this.CreateFile("/log/", "logRecord");
+			cs.writeToLog(false);
+			dir = new File(logFilepath);
+			System.out.println("------dir is =---------"+dir);
+			fs = dir.listFiles();
+			System.out.println("------fs.length is =---------"+fs.length);
+			for (int j=0; j < fs.length; j++) {
+				System.out.println("-----------------here------------");
+				logList.add(fs[j].getName());
+				logMap.put(fs[j].getName(), "log");
+			}
+			Collections.sort(logList);
+			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			System.out.println("No log records to recover");
 			isRecovering = false;
 			return;
 		}else{
-			ArrayList<String> logList = new ArrayList<String>();
-			Map<String, String> logMap = new HashMap<String, String>();
 			for (int j=0; j < fs.length; j++) {
 				logList.add(fs[j].getName());
-				logMap.put(fs[j].getName(), "log/");
+				logMap.put(fs[j].getName(), "log");
 			}
 			Collections.sort(logList);
-
-			fh = new FileHandle(logMap, logList, "", "");
-			
+			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			TinyRec r1 = new TinyRec();
 			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
 			if(retRR != FSReturnVals.Success ){

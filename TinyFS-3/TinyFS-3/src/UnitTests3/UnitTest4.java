@@ -23,11 +23,15 @@ public class UnitTest4 {
 	public static void main(String[] args) {
 		String dir1 = "Shahram";
 		ClientFS cfs = new ClientFS();
+//		System.out.println("----------0.1------------");
 		FSReturnVals fsrv = cfs.CreateDir("/", dir1);
+
+//		System.out.println("----------0.2------------");
 		if ( fsrv != FSReturnVals.Success ){
 			System.out.println("Unit test 4 result: fail!");
     		return;
 		}
+//		System.out.println("----------0------------");
 		fsrv = cfs.CreateFile("/" + dir1 + "/", "emp");
 		if( fsrv != FSReturnVals.Success ){
 			System.out.println("Unit test 4 result: fail!");
@@ -36,6 +40,7 @@ public class UnitTest4 {
 		//get the file handle first
 		FileHandle fh = new FileHandle();
 		FSReturnVals ofd = cfs.OpenFile("/" + dir1 + "/emp", fh);
+//		System.out.println("----------1------------");
 		if(ofd != FSReturnVals.Success ){
 			System.out.println("Unit test 4 result: fail!");
     		return;
