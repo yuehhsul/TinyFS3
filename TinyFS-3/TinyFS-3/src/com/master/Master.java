@@ -18,6 +18,16 @@ public class Master {
 	private static Map<String, String> chunkAddrMap;
 	public ChunkServer cs;
 	
+	//Defined ints for log records
+	public static final int createDirCMD = 1001;
+	public static final int deleteDirCMD = 1002;
+	public static final int renameDirCMD = 1003;
+	public static final int createFileCMD = 1004;
+	public static final int deleteFileCMD = 1005;
+	
+	//Boolean when recovering
+	private boolean isRecovering = false;
+	
 	public Master() {
 		fileNSMap = new HashMap<String, ArrayList<String>>();
 		fileNSMap.put("/", new ArrayList<String>());
@@ -61,6 +71,7 @@ public class Master {
 		fileNSMap.put(src, srcDir);
 		fileNSMap.put(fullPath, new ArrayList<String>());
 		System.out.println("CreateDir: directory creation successful");
+		
 	    return FSReturnVals.Success;
 	}
 
@@ -348,11 +359,16 @@ public class Master {
 		return FSReturnVals.Success;
 	}
 	
+	private void logRecover() {
+		
+	}
+	
 	public static void main(String args[])
 	{
 		//Create the hashmap (populate it)
 		//Accept client connections
 		Master master = new Master();
+		master.logRecover();
 	}
 
 
