@@ -55,8 +55,9 @@ public class Master {
 	 * Example usage: CreateDir("/", "Shahram"), CreateDir("/Shahram/",
 	 * "CSCI485"), CreateDir("/Shahram/CSCI485/", "Lecture1")
 	 */
-	public FSReturnVals CreateDir(String src, String dirname) {
-		String fullPath = src+dirname;
+	public FSReturnVals CreateDir(String srcDirectory, String dirname) {
+		String fullPath = srcDirectory+dirname;
+		String src = srcDirectory;
 		if(src.length()>2) {
 			src = src.substring(0, src.length()-1);
 		}
@@ -86,6 +87,7 @@ public class Master {
 		if(!isRecovering) {	//Only write log records when not recovering namespaces
 			cs.writeToLog(true);
 			for(int i=0;i<3;i++) {
+				System.out.println("Reached log write in createDIR--------");
 				RID RecordID = new RID();
 				switch(i) {
 					case 0:	//append commanddtype
@@ -96,7 +98,7 @@ public class Master {
 						break;
 					case 1:	//append argOne
 						System.out.println("Reached:"+i);
-						byte[] srcBA = src.getBytes();
+						byte[] srcBA = srcDirectory.getBytes();
 						cs.AppendRecord(fh, srcBA, RecordID);
 						break;
 					case 2:
@@ -121,8 +123,9 @@ public class Master {
 	 *
 	 * Example usage: DeleteDir("/Shahram/CSCI485/", "Lecture1")
 	 */
-	public FSReturnVals DeleteDir(String src, String dirname) {
-		String fullPath = src+dirname;
+	public FSReturnVals DeleteDir(String srcDir, String dirname) {
+		String fullPath = srcDir+dirname;
+		String src = srcDir;
 		if(src.length()>2) {
 			src = src.substring(0, src.length()-1);
 		}
@@ -156,7 +159,7 @@ public class Master {
 							cs.AppendRecord(fh, bb.array(), RecordID);
 							break;
 						case 1:	//append argOne
-							byte[] srcBA = src.getBytes();
+							byte[] srcBA = srcDir.getBytes();
 							cs.AppendRecord(fh, srcBA, RecordID);
 							break;
 						case 2:
@@ -314,7 +317,8 @@ public class Master {
 	 *
 	 * Example usage: Createfile("/Shahram/CSCI485/Lecture1/", "Intro.pptx")
 	 */
-	public FSReturnVals CreateFile(String tgtdir, String filename) {
+	public FSReturnVals CreateFile(String dir, String filename) {
+		String tgtdir = dir;
 		if(tgtdir.length()>2) {
 			tgtdir = tgtdir.substring(0, tgtdir.length()-1);
 		}
@@ -359,7 +363,7 @@ public class Master {
 						cs.AppendRecord(fh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
-						byte[] srcBA = tgtdir.getBytes();
+						byte[] srcBA = dir.getBytes();
 						cs.AppendRecord(fh, srcBA, RecordID);
 						break;
 					case 2:
@@ -534,6 +538,7 @@ public class Master {
 			Collections.sort(logList);
 			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			System.out.println("No log records to recover");
+			
 			isRecovering = false;
 			return;
 		}else{
@@ -544,25 +549,36 @@ public class Master {
 			Collections.sort(logList);
 			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			TinyRec r1 = new TinyRec();
+			cs.readFromLog(true);
+			System.out.println("Reading first");
 			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
+			cs.readFromLog(false);
 			if(retRR != FSReturnVals.Success ){
 				System.out.println("logRecover ReadFirstRecord Fail: "+retRR);
 				isRecovering = false;
 	    		return;
 			}
 
-			int typeCounter = 0; //0 is cmd, 1 is first arg, 2 is second arg
+			int typeCounter = 1; //0 is cmd, 1 is first arg, 2 is second arg
 			int cmdType = -1;
+			if(r1.getRID()!=null) {
+				byte[] ba = r1.getPayload();
+				ByteBuffer cmdbb = ByteBuffer.wrap(ba);
+				cmdType = cmdbb.getInt();
+			}
 			String argOne = null;
 			String argTwo = null;
 			while (r1.getRID() != null){
 				TinyRec r2 = new TinyRec();
 				cs.readFromLog(true);
+				System.out.println("Reading next:"+typeCounter);
 				cs.ReadNextRecord(fh, r1.getRID(), r2);
 				cs.readFromLog(false);
+//				System.out.println("cmd type is = "+typeCounter);
 				if(r2.getRID() != null){
 					//Get payload
 					byte[] instrBA = r2.getPayload();
+					System.out.println("typecounter is ="+typeCounter);
 					switch(typeCounter) {
 						case 0: //Get cmd
 							ByteBuffer bb = ByteBuffer.wrap(instrBA);
@@ -573,24 +589,31 @@ public class Master {
 							break;
 						case 2: //Get second arg and execute if no error
 							argTwo = (new String(instrBA)).toString();
+							System.out.println(cmdType+" "+argOne+" "+argTwo);
 							if(cmdType>0 && argOne!=null && argTwo!=null) {
 								switch(cmdType) {
 									case createDirCMD:
+										System.out.println("calling: CreateDir("+argOne+", "+argTwo+")");
 										this.CreateDir(argOne, argTwo);
 										break;
 									case deleteDirCMD:
+										System.out.println("calling: deleteDir("+argOne+", "+argTwo+")");
 										this.DeleteDir(argOne, argTwo);
 										break;
 									case renameDirCMD:
+										System.out.println("calling: renameDir("+argOne+", "+argTwo+")");
 										this.RenameDir(argOne, argTwo);
 										break;
 									case createFileCMD:
+										System.out.println("calling: createFile("+argOne+", "+argTwo+")");
 										this.CreateFile(argOne, argTwo);
 										break;
 									case deleteFileCMD:
-										master.DeleteFile(argOne, argTwo);
+										System.out.println("calling: deleteFile("+argOne+", "+argTwo+")");
+										this.DeleteFile(argOne, argTwo);
 										break;
 									default:
+										System.out.println("default reached");
 										break;
 								}
 							}
@@ -599,6 +622,8 @@ public class Master {
 							break;
 					}
 					r1 = r2;
+					typeCounter += 1;
+					typeCounter %= 3;
 				} else {
 					r1.setRID(null);
 				}

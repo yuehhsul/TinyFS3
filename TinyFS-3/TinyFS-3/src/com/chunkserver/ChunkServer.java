@@ -86,7 +86,7 @@ public class ChunkServer implements ChunkServerInterface {
 		bb.putInt(0);
 		bb.putInt(12);
 		writeChunk(chunkHandle, bb.array(), 0);
-		System.out.println(chunkHandle+" reached has numRecs="+getNumOfRecords(chunkHandle));
+//		System.out.println(chunkHandle+" reached has numRecs="+getNumOfRecords(chunkHandle));
 		
 	}
 	
@@ -148,6 +148,9 @@ public class ChunkServer implements ChunkServerInterface {
 			return FSReturnVals.BadRecID;
 		}
 		System.out.println("filename = "+ofh.getName());
+//		ByteBuffer intBB = ByteBuffer.wrap(payload);
+//		int cmdInt = intBB.getInt();
+//		System.out.println("CmD type stored ="+cmdInt);
 		
 		ArrayList<String> chunkList = ofh.getChunkList();
 		System.out.println("chunklist size= "+chunkList.size());
@@ -164,7 +167,9 @@ public class ChunkServer implements ChunkServerInterface {
 		
 		int toWriteIndex = getNextAvailableIndex(chunkHandle);
 		boolean pass = writeChunk(chunkHandle, payload, toWriteIndex);
-		System.out.println("Writing to:"+filePath+" "+pass);
+//		System.out.println("chunk had "+getNumOfRecords(chunkHandle));
+		System.out.println("Writing to:"+filePath+" --> "+chunkHandle+" at "+toWriteIndex+" "+pass);
+		System.out.println("chunk now has "+getNumOfRecords(chunkHandle));
 		if(pass) {
 			setOffsetFromSlot(chunkHandle, slot, toWriteIndex);
 			//Set RID
@@ -265,9 +270,9 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		ArrayList<String> chunkList = ofh.getChunkList();
 		String chunkHandle = chunkList.get(0);
-		
+//		System.out.println("Read First from:"+chunkHandle);
 		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
-			System.out.println("Chunk is empty");
+			System.out.println("Chunk "+chunkHandle+" +is empty");
 			return FSReturnVals.RecDoesNotExist;
 		}
 
@@ -493,7 +498,10 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	private int getNumOfSlots(String chunkHandle) {
 		byte[] slotNum = readChunk(chunkHandle, 4, 4);
-		int numOfSlots = ByteBuffer.wrap(slotNum).getInt();
+		int numOfSlots = 0;
+		if(slotNum!=null) {
+			numOfSlots = ByteBuffer.wrap(slotNum).getInt();
+		}
 		return numOfSlots;
 	}
 	
