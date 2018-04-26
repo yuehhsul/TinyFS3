@@ -1,5 +1,6 @@
 package com.chunkserver;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -153,6 +154,9 @@ public class ChunkServer implements ChunkServerInterface {
 		
 		ArrayList<String> chunkList = ofh.getChunkList();
 		System.out.println("chunklist size= "+chunkList.size());
+		if(chunkList.size()==0) {
+			createChunk();
+		}
 		String chunkHandle = chunkList.get(0);
 		if(chunkList.size()>1) {
 			chunkHandle = chunkList.get(chunkList.size()-1);
@@ -281,6 +285,17 @@ public class ChunkServer implements ChunkServerInterface {
 		int firstRecLength = getRecordLength(chunkHandle, firstSlot);	//Get record length of the first valid record, which is the first record
 
 		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
+		if(firstRec.toString().equals("meta")) {
+			RID currRID = new RID(chunkHandle, firstSlot, firstRecLength);
+			RID toReturnRID = new RID();
+			byte[] ba = ReadSubRecord(ofh, currRID, toReturnRID);
+			if(ba==null) {
+				return FSReturnVals.Fail;
+			}
+			rec.setPayload(ba); 
+			rec.setRID(toReturnRID);
+			return FSReturnVals.Success;
+		}
 		rec.setPayload(firstRec); 
 		RID rid = new RID(chunkHandle, firstSlot, firstRecLength);
 		rec.setRID(rid);
@@ -360,7 +375,20 @@ public class ChunkServer implements ChunkServerInterface {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
 			int recordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
 			int recordLen = getRecordLength(chunkHandle, nextSlot);
-			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+			
+			byte[] nextRec = readChunk(chunkHandle, recordOffset, recordLen);
+			if(nextRec.toString().equals("meta")) {
+				RID currRID = new RID(chunkHandle, nextSlot, recordLen);
+				RID toReturnRID = new RID();
+				byte[] ba = ReadSubRecord(ofh, currRID, toReturnRID);
+				if(ba==null) {
+					return FSReturnVals.Fail;
+				}
+				rec.setPayload(ba); 
+				rec.setRID(toReturnRID);
+				return FSReturnVals.Success;
+			}
+			rec.setPayload(nextRec);
 			RID rid = new RID(chunkHandle, nextSlot, recordLen);
 			rec.setRID(rid);
 			return FSReturnVals.Success;
@@ -371,7 +399,20 @@ public class ChunkServer implements ChunkServerInterface {
 			System.out.println("change to:"+nextChunkHandle);
 			int firstSlotNum = getFirstSlotNumber(nextChunkHandle);
 			int recordLen = getRecordLength(nextChunkHandle, firstSlotNum);
-			rec.setPayload(readChunk(nextChunkHandle, 12, recordLen));
+			
+			byte[] nextRec = readChunk(nextChunkHandle, 12, recordLen);
+			if(nextRec.toString().equals("meta")) {
+				RID currRID = new RID(chunkHandle, firstSlotNum, recordLen);
+				RID toReturnRID = new RID();
+				byte[] ba = ReadSubRecord(ofh, currRID, toReturnRID);
+				if(ba==null) {
+					return FSReturnVals.Fail;
+				}
+				rec.setPayload(ba); 
+				rec.setRID(toReturnRID);
+				return FSReturnVals.Success;
+			}
+			rec.setPayload(nextRec);
 			RID rid = new RID(nextChunkHandle, firstSlotNum, recordLen);
 			rec.setRID(rid);
 			return FSReturnVals.Success;
@@ -441,6 +482,47 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 	}
 	
+	
+	public byte[] ReadSubRecord(FileHandle ofh, RID pivot, RID recordID){
+		TinyRec nextRec = new TinyRec();
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+//		outputStream.write( a );
+//		outputStream.write( b );
+
+//		byte c[] = outputStream.toByteArray( );
+		while(true) {
+			if(ReadNextRecord(ofh,pivot,nextRec)==FSReturnVals.RecDoesNotExist) {
+				return null;
+			}
+			if((nextRec.getPayload()).toString().equals("meta")) {
+				recordID = nextRec.getRID();
+				return outputStream.toByteArray();
+			}
+			try {
+				outputStream.write(nextRec.getPayload());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+//		ArrayList<String> chunkList = ofh.getChunkList();
+//		String chunkHandle = chunkList.get(chunkList.size()-1);
+//		
+//		if(getNumOfRecords(chunkHandle)==0) { // if the chunk is empty
+//			return null;
+//		}
+		
+//		int lastSlot = getLastSlotNumber(chunkHandle);
+//		int recordLen  = getRecordLength(chunkHandle, lastSlot);
+//		int lastOffset = getOffsetFromSlot(chunkHandle, lastSlot);
+//		
+//		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
+//		RID rid = new RID(chunkHandle, lastSlot, recordLen);
+//		rec.setRID(rid);
+//		return FSReturnVals.Success;
+	}
+	
 	/**
 	 * Helper:
 	 * Gets the length of the record
@@ -462,7 +544,7 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Helper:
 	 * Returns available empty space
 	 */
-	private int getEmptySpace(String chunkHandle) {
+	public int getEmptySpace(String chunkHandle) {
 		int nextIndex = getNextAvailableIndex(chunkHandle);
 		int numOfSlots = getNumOfSlots(chunkHandle);
 		int lastIndex = ChunkSize - numOfSlots*4 - 4; //-4 because it has to allocate a slot

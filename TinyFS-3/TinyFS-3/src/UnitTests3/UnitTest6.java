@@ -150,20 +150,21 @@ public class UnitTest6 {
 			byte[] contentBytes = getBytesFromFile(new File("SuperHeros/" + filename + ".jpg"), size);
 			byte[] sizeBytes = ByteBuffer.allocate(intSize).putInt((int)size).array();
 			imagePL = img1.getPayload();
+			System.out.println("image payload length = "+imagePL.length);
 			for(int j = 0; j < imagePL.length; j++){
 				if(j < 4){
 					if(imagePL[j] != indexBytes[j]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail1!");
 						return;
 					}
 				}else if(j < 8){
 					if(imagePL[j] != sizeBytes[j - 4]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail2!");
 						return;
 					}
 				}else{
 					if(imagePL[j] != contentBytes[j - 8]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail3!");
 						return;
 					}
 				}
@@ -176,17 +177,17 @@ public class UnitTest6 {
 			for(int j = 0; j < namePL.length; j++){
 				if(j < 4){
 					if(namePL[j] != indexBytes[j]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail4!");
 						return;
 					}
 				}else if(j < 8){
 					if(namePL[j] != sizeBytes[j - 4]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail5!");
 						return;
 					}
 				}else{
 					if(namePL[j] != contentBytes[j - 8]){
-						System.out.println("Unit test 6 result: fail!");
+						System.out.println("Unit test 6 result: fail6!");
 						return;
 					}
 				}

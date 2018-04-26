@@ -69,13 +69,23 @@ public class FileHandle {
 		return null;
 	}
 	
+	public String getFirstChunk() {
+		if(this.isEmpty()) return null;
+		else return chunkList.get(0);
+	}
+	
+	public String getLastChunk() {
+		if(this.isEmpty()) return null;
+		else return chunkList.get(chunkList.size()-1);
+	}
+	
 	public boolean isLastChunk(String chunkHandle) {
-		if(chunkHandle.equals(chunkList.get(chunkList.size()-1))) return true;
+		if(chunkHandle.equals(getLastChunk())) return true;
 		return false;
 	}
 	
 	public boolean isFirstChunk(String chunkHandle) {
-		if(chunkHandle.equals(chunkList.get(0))) return true;
+		if(chunkHandle.equals(getFirstChunk())) return true;
 		return false;
 	}
 	

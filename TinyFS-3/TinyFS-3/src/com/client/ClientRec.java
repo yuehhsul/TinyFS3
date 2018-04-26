@@ -33,36 +33,53 @@ public class ClientRec {
 		if(payload.length>maxChunkSize) {
 			int startIndex = 0;
 			int endIndex = -1;
+
+			FileHandle tempfh = ofh;
+			String metaChunk = ofh.getLastChunk();
+			//metarecord
+			if(cs.getEmptySpace(ofh.getLastChunk())<0) {
+				tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+				metaChunk = ofh.getLastChunk();
+			}
+			byte[] metaba = "meta".getBytes();
+			if(cs.AppendRecord(tempfh, metaba, RecordID) == FSReturnVals.Fail) {
+				RecordID = null;
+			}
+			
 			while(true) {
 				endIndex = startIndex + maxChunkSize;
-				FileHandle tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+				int prevChunkEmptySpace = cs.getEmptySpace(ofh.getLastChunk());
+				
 				if(endIndex>=payload.length) {
+					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 					System.out.println("Appending last subrecord!------------------------size ="+String.valueOf(payload.length-startIndex));
 					byte[] subPayload = Arrays.copyOfRange(payload, startIndex, payload.length);
 					FSReturnVals lastappfs = cs.AppendRecord(tempfh, subPayload, RecordID);
 					if(lastappfs != FSReturnVals.Success) {
 						System.out.println("Appending last subrecord still failed");
-						if(lastappfs != FSReturnVals.Fail) {
+						if(lastappfs == FSReturnVals.Fail) {
 							RecordID = null;
 						}
 						return lastappfs;
 					}
-					return cs.AppendRecord(tempfh, subPayload, RecordID);
+					return AppendRecord(tempfh, metaba, RecordID);
+//					return lastappfs;
 				}
+//				if(prevChunkEmptySpace<maxChunkSize) {
+					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+//				}
+				
 				byte[] subPayload = Arrays.copyOfRange(payload, startIndex, endIndex);
-//				cs.AppendRecord(ofh, subPayload, RecordID);
-//				FileHandle tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
-				FSReturnVals appfs =  cs.AppendRecord(tempfh, subPayload, RecordID);
+				FSReturnVals appfs = cs.AppendRecord(tempfh, subPayload, RecordID);
 				if(appfs != FSReturnVals.Success) {
 					System.out.println("Appending subrecord still failed");
-					if(appfs != FSReturnVals.Fail) {
+					if(appfs == FSReturnVals.Fail) {
 						RecordID = null;
 					}
 					return appfs;
 				}
 				startIndex = endIndex;
 			}
-			//store special meta records
 		}
 		
 		FSReturnVals retVal = cs.AppendRecord(ofh, payload, RecordID);
