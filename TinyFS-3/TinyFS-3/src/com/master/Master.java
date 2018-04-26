@@ -28,6 +28,7 @@ public class Master {
 	public static final int renameDirCMD = 1003;
 	public static final int createFileCMD = 1004;
 	public static final int deleteFileCMD = 1005;
+	public static final int createChunkCMD = 1006;
 	
 	//Boolean when recovering
 	private static boolean isRecovering = false;
@@ -91,13 +92,11 @@ public class Master {
 				RID RecordID = new RID();
 				switch(i) {
 					case 0:	//append commanddtype
-//						System.out.println("Reached:"+i+" list size= "+fh.getChunkList().size());
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createDirCMD);
 						cs.AppendRecord(fh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
-						System.out.println("Reached:"+i);
 						byte[] srcBA = srcDirectory.getBytes();
 						cs.AppendRecord(fh, srcBA, RecordID);
 						break;
@@ -357,7 +356,6 @@ public class Master {
 				RID RecordID = new RID();
 				switch(i) {
 					case 0:	//append commanddtype
-						System.out.println("reached-----------------");
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createFileCMD);
 						cs.AppendRecord(fh, bb.array(), RecordID);
@@ -412,6 +410,32 @@ public class Master {
 			dir = filename.substring(0, filename.lastIndexOf("/"));
 		}
 		FileHandle fh = new FileHandle(map, chunkList, dir, filename);
+		
+	/*	if(!isRecovering) {	//Only write log records when not recovering namespaces
+			cs.writeToLog(true);
+			for(int i=0;i<3;i++) {
+				RID RecordID = new RID();
+				switch(i) {
+					case 0:	//append commanddtype
+						ByteBuffer bb = ByteBuffer.allocate(4);
+						bb.putInt(createChunkCMD);
+						cs.AppendRecord(fh, bb.array(), RecordID);
+						break;
+					case 1:	//append argOne
+						byte[] srcBA = tgtdir.getBytes();
+						cs.AppendRecord(fh, srcBA, RecordID);
+						break;
+					case 2:
+						byte[] nameBA = filename.getBytes();
+						cs.AppendRecord(fh, nameBA, RecordID);
+						break;
+					default:
+						break;
+				}
+			}
+			cs.writeToLog(false);
+		} */
+		
 		return fh;
 	}
 
@@ -611,6 +635,10 @@ public class Master {
 									case deleteFileCMD:
 										System.out.println("calling: deleteFile("+argOne+", "+argTwo+")");
 										this.DeleteFile(argOne, argTwo);
+										break;
+									case createChunkCMD:
+										System.out.println("calling: createNewChunk("+argOne+", "+argTwo+")");
+										this.createNewChunk(argOne, argTwo);
 										break;
 									default:
 										System.out.println("default reached");
