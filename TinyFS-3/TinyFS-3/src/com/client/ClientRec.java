@@ -2,6 +2,7 @@ package com.client;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.chunkserver.ChunkServer;
 import com.client.ClientFS.FSReturnVals;
@@ -12,7 +13,7 @@ public class ClientRec {
 	ClientFS cfs;
 
 	public ClientRec() {
-		cs = new ChunkServer();
+		cs = new ChunkServer(0);
 	}
 	
 	public void init(ClientFS clientFS) {
@@ -27,6 +28,43 @@ public class ClientRec {
 	 * Example usage: AppendRecord(FH1, obama, RecID1)
 	 */
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
+		//Case where payload is larger than max chunk size
+		int maxChunkSize = 4080;
+		if(payload.length>maxChunkSize) {
+			int startIndex = 0;
+			int endIndex = -1;
+			while(true) {
+				endIndex = startIndex + maxChunkSize;
+				FileHandle tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+				if(endIndex>=payload.length) {
+					System.out.println("Appending last subrecord!------------------------size ="+String.valueOf(payload.length-startIndex));
+					byte[] subPayload = Arrays.copyOfRange(payload, startIndex, payload.length);
+					FSReturnVals lastappfs = cs.AppendRecord(tempfh, subPayload, RecordID);
+					if(lastappfs != FSReturnVals.Success) {
+						System.out.println("Appending last subrecord still failed");
+						if(lastappfs != FSReturnVals.Fail) {
+							RecordID = null;
+						}
+						return lastappfs;
+					}
+					return cs.AppendRecord(tempfh, subPayload, RecordID);
+				}
+				byte[] subPayload = Arrays.copyOfRange(payload, startIndex, endIndex);
+//				cs.AppendRecord(ofh, subPayload, RecordID);
+//				FileHandle tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+				FSReturnVals appfs =  cs.AppendRecord(tempfh, subPayload, RecordID);
+				if(appfs != FSReturnVals.Success) {
+					System.out.println("Appending subrecord still failed");
+					if(appfs != FSReturnVals.Fail) {
+						RecordID = null;
+					}
+					return appfs;
+				}
+				startIndex = endIndex;
+			}
+			//store special meta records
+		}
+		
 		FSReturnVals retVal = cs.AppendRecord(ofh, payload, RecordID);
 		if(retVal==FSReturnVals.Fail) {
 			RecordID = null;
@@ -35,8 +73,8 @@ public class ClientRec {
 		else if(retVal==FSReturnVals.RecordTooLong) {
 			System.out.println("creating new chunk");
 			System.out.println("ofhgetdir = "+ofh.getDir());
-			ofh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
-			return AppendRecord(ofh, payload, RecordID);
+			FileHandle newfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
+			return AppendRecord(newfh, payload, RecordID);
 		}
 		return retVal;
 	}

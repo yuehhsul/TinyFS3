@@ -32,19 +32,22 @@ public class Master {
 	
 	//Boolean when recovering
 	private static boolean isRecovering = false;
-	FileHandle fh;
+	private FileHandle logfh;
 	
 	//Filepath to log dir
 	private static String logFilepath = "log/";
 	
 	private static Master master;
 	
+	private int chunkServerID;
+	
 	public Master() {
+		chunkServerID = 0;
 		fileNSMap = new HashMap<String, ArrayList<String>>();
 		fileNSMap.put("/", new ArrayList<String>());
 		fileHandleMap = new HashMap<String, ArrayList<String>>();
 		chunkAddrMap = new HashMap<String, String>();
-		cs = new ChunkServer();
+		cs = new ChunkServer(chunkServerID);
 		this.logRecover();
 	}
 
@@ -94,16 +97,17 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createDirCMD);
-						cs.AppendRecord(fh, bb.array(), RecordID);
+//						System.out.println("fh name is "+fh.getName());
+						cs.AppendRecord(logfh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = srcDirectory.getBytes();
-						cs.AppendRecord(fh, srcBA, RecordID);
+						cs.AppendRecord(logfh, srcBA, RecordID);
 						break;
 					case 2:
 						System.out.println("Reached:"+i);
 						byte[] nameBA = dirname.getBytes();
-						cs.AppendRecord(fh, nameBA, RecordID);
+						cs.AppendRecord(logfh, nameBA, RecordID);
 						break;
 					default:
 						break;
@@ -155,15 +159,15 @@ public class Master {
 						case 0:	//append commanddtype
 							ByteBuffer bb = ByteBuffer.allocate(4);
 							bb.putInt(deleteDirCMD);
-							cs.AppendRecord(fh, bb.array(), RecordID);
+							cs.AppendRecord(logfh, bb.array(), RecordID);
 							break;
 						case 1:	//append argOne
 							byte[] srcBA = srcDir.getBytes();
-							cs.AppendRecord(fh, srcBA, RecordID);
+							cs.AppendRecord(logfh, srcBA, RecordID);
 							break;
 						case 2:
 							byte[] nameBA = dirname.getBytes();
-							cs.AppendRecord(fh, nameBA, RecordID);
+							cs.AppendRecord(logfh, nameBA, RecordID);
 							break;
 						default:
 							break;
@@ -245,15 +249,15 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(renameDirCMD);
-						cs.AppendRecord(fh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = src.getBytes();
-						cs.AppendRecord(fh, srcBA, RecordID);
+						cs.AppendRecord(logfh, srcBA, RecordID);
 						break;
 					case 2:
 						byte[] nameBA = NewName.getBytes();
-						cs.AppendRecord(fh, nameBA, RecordID);
+						cs.AppendRecord(logfh, nameBA, RecordID);
 						break;
 					default:
 						break;
@@ -354,19 +358,20 @@ public class Master {
 			cs.writeToLog(true);
 			for(int i=0;i<3;i++) {
 				RID RecordID = new RID();
+//				System.out.println("fh name is "+fh.getName());
 				switch(i) {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createFileCMD);
-						cs.AppendRecord(fh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = dir.getBytes();
-						cs.AppendRecord(fh, srcBA, RecordID);
+						cs.AppendRecord(logfh, srcBA, RecordID);
 						break;
 					case 2:
 						byte[] nameBA = filename.getBytes();
-						cs.AppendRecord(fh, nameBA, RecordID);
+						cs.AppendRecord(logfh, nameBA, RecordID);
 						break;
 					default:
 						break;
@@ -379,6 +384,7 @@ public class Master {
 	}
 	
 	public FileHandle createNewChunk(String tgtdir, String filename) {
+//		System.out.println("cncfh name is "+fh.getName());
 		//Check tgtdir directory exists
 		if(!fileNSMap.containsKey(tgtdir)) {
 			System.out.println("CreateChunk: tgtdir does not exist");
@@ -399,6 +405,7 @@ public class Master {
 		fileHandleMap.put(filename, chunkList);
 		chunkAddrMap.put(chunkHandle, "csci485");
 		Map<String, String> map = new HashMap<String, String>();
+//		System.out.println("cncfh name is "+fh.getName());
 		for(int i=0;i<chunkList.size();i++) {
 			String chunkhandle = chunkList.get(i);
 			String chunkAddr = chunkAddrMap.get(chunkhandle);
@@ -409,34 +416,35 @@ public class Master {
 		if(occurrences>1) {
 			dir = filename.substring(0, filename.lastIndexOf("/"));
 		}
-		FileHandle fh = new FileHandle(map, chunkList, dir, filename);
+		FileHandle returnFh = new FileHandle(map, chunkList, dir, filename);
 		
-	/*	if(!isRecovering) {	//Only write log records when not recovering namespaces
-			cs.writeToLog(true);
-			for(int i=0;i<3;i++) {
-				RID RecordID = new RID();
-				switch(i) {
-					case 0:	//append commanddtype
-						ByteBuffer bb = ByteBuffer.allocate(4);
-						bb.putInt(createChunkCMD);
-						cs.AppendRecord(fh, bb.array(), RecordID);
-						break;
-					case 1:	//append argOne
-						byte[] srcBA = tgtdir.getBytes();
-						cs.AppendRecord(fh, srcBA, RecordID);
-						break;
-					case 2:
-						byte[] nameBA = filename.getBytes();
-						cs.AppendRecord(fh, nameBA, RecordID);
-						break;
-					default:
-						break;
-				}
-			}
-			cs.writeToLog(false);
-		} */
+//		if(!isRecovering) {	//Only write log records when not recovering namespaces
+//			cs.writeToLog(true);
+//			for(int i=0;i<3;i++) {
+//				RID RecordID = new RID();
+////				System.out.println("fh name is "+fh.getName());
+//				switch(i) {
+//					case 0:	//append commanddtype
+//						ByteBuffer bb = ByteBuffer.allocate(4);
+//						bb.putInt(createChunkCMD);
+//						cs.AppendRecord(logfh, bb.array(), RecordID);
+//						break;
+//					case 1:	//append argOne
+//						byte[] srcBA = tgtdir.getBytes();
+//						cs.AppendRecord(logfh, srcBA, RecordID);
+//						break;
+//					case 2:
+//						byte[] nameBA = filename.getBytes();
+//						cs.AppendRecord(logfh, nameBA, RecordID);
+//						break;
+//					default:
+//						break;
+//				}
+//			}
+//			cs.writeToLog(false);
+//		}
 		
-		return fh;
+		return returnFh;
 	}
 
 	/**
@@ -477,15 +485,15 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(deleteFileCMD);
-						cs.AppendRecord(fh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, bb.array(), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = tgtdir.getBytes();
-						cs.AppendRecord(fh, srcBA, RecordID);
+						cs.AppendRecord(logfh, srcBA, RecordID);
 						break;
 					case 2:
 						byte[] nameBA = filename.getBytes();
-						cs.AppendRecord(fh, nameBA, RecordID);
+						cs.AppendRecord(logfh, nameBA, RecordID);
 						break;
 					default:
 						break;
@@ -521,8 +529,8 @@ public class Master {
 		if(occurrences>1) {
 			dir = FilePath.substring(0, FilePath.lastIndexOf("/"));
 		}
-		FileHandle fh = new FileHandle(fileChunkAddrMap, chunkList, dir, FilePath);
-		ofh = fh;
+		FileHandle openfh = new FileHandle(fileChunkAddrMap, chunkList, dir, FilePath);
+		ofh = openfh;
 		return FSReturnVals.Success;
 	}
 
@@ -560,7 +568,7 @@ public class Master {
 				logMap.put(fs[j].getName(), "log");
 			}
 			Collections.sort(logList);
-			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
+			logfh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			System.out.println("No log records to recover");
 			
 			isRecovering = false;
@@ -571,11 +579,11 @@ public class Master {
 				logMap.put(fs[j].getName(), "log");
 			}
 			Collections.sort(logList);
-			fh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
+			logfh = new FileHandle(logMap, logList, "/log", "/log/logRecord");
 			TinyRec r1 = new TinyRec();
 			cs.readFromLog(true);
 			System.out.println("Reading first");
-			FSReturnVals retRR = cs.ReadFirstRecord(fh, r1);
+			FSReturnVals retRR = cs.ReadFirstRecord(logfh, r1);
 			cs.readFromLog(false);
 			if(retRR != FSReturnVals.Success ){
 				System.out.println("logRecover ReadFirstRecord Fail: "+retRR);
@@ -596,9 +604,8 @@ public class Master {
 				TinyRec r2 = new TinyRec();
 				cs.readFromLog(true);
 				System.out.println("Reading next:"+typeCounter);
-				cs.ReadNextRecord(fh, r1.getRID(), r2);
+				cs.ReadNextRecord(logfh, r1.getRID(), r2);
 				cs.readFromLog(false);
-//				System.out.println("cmd type is = "+typeCounter);
 				if(r2.getRID() != null){
 					//Get payload
 					byte[] instrBA = r2.getPayload();
@@ -665,7 +672,6 @@ public class Master {
 		//Create the hashmap (populate it)
 		//Accept client connections
 		master = new Master();
-//		master.logRecover();
 	}
 
 

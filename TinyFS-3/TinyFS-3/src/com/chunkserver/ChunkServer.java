@@ -53,7 +53,8 @@ public class ChunkServer implements ChunkServerInterface {
 	/**
 	 * Initialize the chunk server
 	 */
-	public ChunkServer(){
+	public ChunkServer(int id){
+		this.csid = id;
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles();
 
@@ -75,7 +76,7 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String createChunk() {
 		counter += 1;
-		String chunkHandle = String.valueOf(counter);
+		String chunkHandle = String.valueOf(this.csid)+String.valueOf(counter);
 		initializeChunk(chunkHandle);
 		return chunkHandle;
 	}
@@ -86,8 +87,6 @@ public class ChunkServer implements ChunkServerInterface {
 		bb.putInt(0);
 		bb.putInt(12);
 		writeChunk(chunkHandle, bb.array(), 0);
-//		System.out.println(chunkHandle+" reached has numRecs="+getNumOfRecords(chunkHandle));
-		
 	}
 	
 	/**
@@ -169,7 +168,7 @@ public class ChunkServer implements ChunkServerInterface {
 		boolean pass = writeChunk(chunkHandle, payload, toWriteIndex);
 //		System.out.println("chunk had "+getNumOfRecords(chunkHandle));
 		System.out.println("Writing to:"+filePath+" --> "+chunkHandle+" at "+toWriteIndex+" "+pass);
-		System.out.println("chunk now has "+getNumOfRecords(chunkHandle));
+
 		if(pass) {
 			setOffsetFromSlot(chunkHandle, slot, toWriteIndex);
 			//Set RID
@@ -179,8 +178,10 @@ public class ChunkServer implements ChunkServerInterface {
 			setNumOfRecords(chunkHandle, getNumOfRecords(chunkHandle)+1);
 			setNumOfSlots(chunkHandle, getNumOfSlots(chunkHandle)+1);
 			setNextAvailableIndex(chunkHandle, getNextAvailableIndex(chunkHandle)+payload.length);
+			System.out.println("chunk now has "+getNumOfRecords(chunkHandle));
 			return FSReturnVals.Success;
 		}
+		System.out.println("failed but chunk now has "+getNumOfRecords(chunkHandle));
 		return FSReturnVals.Fail;
 	}
 
@@ -465,6 +466,7 @@ public class ChunkServer implements ChunkServerInterface {
 		int nextIndex = getNextAvailableIndex(chunkHandle);
 		int numOfSlots = getNumOfSlots(chunkHandle);
 		int lastIndex = ChunkSize - numOfSlots*4 - 4; //-4 because it has to allocate a slot
+		System.out.println(chunkHandle+" numRecs = "+getNumOfRecords(chunkHandle)+": nextIndex = "+nextIndex+" numOfSlots = "+numOfSlots+" lastIndex = "+lastIndex);
 		return lastIndex-nextIndex;
 	}
 	
@@ -670,7 +672,7 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public static void ReadAndProcessRequests()
 	{
-		ChunkServer cs = new ChunkServer();
+		ChunkServer cs = new ChunkServer(0);
 		
 		//Used for communication with the Client via the network
 		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 

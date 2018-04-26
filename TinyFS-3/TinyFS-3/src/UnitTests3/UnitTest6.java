@@ -38,6 +38,7 @@ public class UnitTest6 {
 		}
 		int intSize = Integer.SIZE / Byte.SIZE;	// 4 bytes
 		ClientRec crec = new ClientRec();
+		crec.init(cfs);
 		
 		System.out.println(TestName + "Create two files for superheroes: One for the name and the other for their images.");
 		//Create two TinyFS filenames, one for the images and a second for the names
@@ -58,6 +59,15 @@ public class UnitTest6 {
 		FileHandle NameFH = new FileHandle();
 		FSReturnVals imgofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".img", ImageFH);
 		FSReturnVals nameofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".names", NameFH);
+		
+		if( imgofd != FSReturnVals.Success ){
+			System.out.println("Unit test 6 result: fail!:"+imgofd);
+    		return;
+		}
+		if( nameofd != FSReturnVals.Success ){
+			System.out.println("Unit test 6 result: fail!:"+nameofd);
+    		return;
+		}
 		
 		for(int i = 0; i < SuperHeros.length; i++){
 			String filename = SuperHeros[i];  //This is the file in the local directory
