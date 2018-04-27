@@ -54,9 +54,9 @@ public class ChunkServer implements ChunkServerInterface {
 	public static final int FALSE = 0;
 	
 	//Record types
-	public static final int metaType = 0;
-	public static final int subType = 1;
-	public static final int normType = 2;
+	private final int metaType = 0;
+	private final int subType = 1;
+	private final int normType = 2;
 	
 	/**
 	 * Initialize the chunk server
@@ -291,11 +291,30 @@ public class ChunkServer implements ChunkServerInterface {
 		int firstSlot = getFirstSlotNumber(chunkHandle);
 		int firstRecLength = getRecordLength(chunkHandle, firstSlot);	//Get record length of the first valid record, which is the first record
 
-		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
-		rec.setPayload(firstRec); 
-		RID rid = new RID(chunkHandle, firstSlot, firstRecLength);
-		rec.setRID(rid);
-		return FSReturnVals.Success;
+		
+		return ReadRecord(ofh, chunkHandle, 12, firstRecLength, firstSlot, rec, true);
+//		
+//		byte[] firstRec = readChunk(chunkHandle, 12, firstRecLength);
+//		int recType = getRecordType(firstRec);
+//		RID rid = new RID(chunkHandle, firstSlot, firstRecLength);
+//		if(recType==metaType) {	//Meta record, read sub
+//			byte[] completeRecord = ReadSubRecord(ofh, firstRec);
+//			rec.setPayload(completeRecord);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
+//		}
+//		else if(recType==subType) {	//Sub record, skip, find next
+//			return ReadNextRecord(ofh,rid,rec);
+//		}
+//		else if(recType==normType) { //Norm record, return
+//			rec.setPayload(firstRec);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
+//		}
+//		else {
+//			System.out.println("Undefined record type");
+//			return FSReturnVals.Fail;
+//		}
 	}
 	
 	public FSReturnVals ReadLastRecord(FileHandle ofh, TinyRec rec){
@@ -317,13 +336,68 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		
 		int lastSlot = getLastSlotNumber(chunkHandle);
-		int recordLen  = getRecordLength(chunkHandle, lastSlot);
+		int lastRecordLen  = getRecordLength(chunkHandle, lastSlot);
 		int lastOffset = getOffsetFromSlot(chunkHandle, lastSlot);
 		
-		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
-		RID rid = new RID(chunkHandle, lastSlot, recordLen);
-		rec.setRID(rid);
-		return FSReturnVals.Success;
+		
+		return ReadRecord(ofh, chunkHandle, lastOffset, lastRecordLen, lastSlot, rec, false);
+		
+//		byte[] lastRec = readChunk(chunkHandle, lastOffset, recordLen);
+//		int recType = getRecordType(lastRec);
+//		RID rid = new RID(chunkHandle, lastSlot, recordLen);
+//		if(recType==metaType) {	//Meta record, read sub
+//			byte[] completeRecord = ReadSubRecord(ofh, lastRec);
+//			rec.setPayload(completeRecord);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
+//		}
+//		else if(recType==subType) {	//Sub record, skip, find next
+//			return ReadPrevRecord(ofh,rid,rec);
+//		}
+//		else if(recType==normType) { //Norm record, return
+//			rec.setPayload(lastRec);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
+//		}
+//		else {
+//			System.out.println("Undefined record type");
+//			return FSReturnVals.Fail;
+//		}
+		
+//		
+//		rec.setPayload(readChunk(chunkHandle, lastOffset, recordLen));
+//		rec.setRID(rid);
+//		return FSReturnVals.Success;
+	}
+	
+	private FSReturnVals ReadRecord(FileHandle ofh, String chunkHandle, int currOffset,
+									int currRecordLen, int currSlot, TinyRec rec, boolean next) {
+		byte[] recba = readChunk(chunkHandle, currOffset, currRecordLen);
+		int recType = getRecordType(recba);
+		RID rid = new RID(chunkHandle, currSlot, currRecordLen);
+		if(recType==metaType) {	//Meta record, read sub
+			byte[] completeRecord = ReadSubRecord(ofh, recba);
+			rec.setPayload(completeRecord);
+			rec.setRID(rid);
+			return FSReturnVals.Success;
+		}
+		else if(recType==subType) {	//Sub record, skip, find next/prev based on next
+			if(next) {
+				return ReadNextRecord(ofh,rid,rec);
+			}
+			return ReadPrevRecord(ofh,rid,rec);
+		}
+		else if(recType==normType) { //Norm record, return
+			rec.setPayload(recba);
+			rec.setRID(rid);
+			return FSReturnVals.Success;
+		}
+		else {
+			System.out.println("Undefined record type");
+			rec.setPayload(null);
+			rec.setRID(null);
+			return FSReturnVals.Fail;
+		}
 	}
 	
 	public FSReturnVals ReadNextRecord(FileHandle ofh, RID pivot, TinyRec rec) {
@@ -369,14 +443,16 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case1: hasn't changed chunk, get next slot
 		if(!changedChunk) {
 			int nextSlot = getNextValidSlot(chunkHandle, currSlot);
-			int recordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
-			int recordLen = getRecordLength(chunkHandle, nextSlot);
+			int nextRecordOffset = getOffsetFromSlot(chunkHandle, nextSlot);
+			int nextRecordLen = getRecordLength(chunkHandle, nextSlot);
 			
-			byte[] nextRec = readChunk(chunkHandle, recordOffset, recordLen);
-			rec.setPayload(nextRec);
-			RID rid = new RID(chunkHandle, nextSlot, recordLen);
-			rec.setRID(rid);
-			return FSReturnVals.Success;
+			return ReadRecord(ofh, chunkHandle, nextRecordOffset, nextRecordLen, nextSlot, rec, true);
+			
+//			byte[] nextRec = readChunk(chunkHandle, recordOffset, recordLen);
+//			rec.setPayload(nextRec);
+//			RID rid = new RID(chunkHandle, nextSlot, recordLen);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
 		}
 		//Case2: changed chunk, read first record using first valid slot
 		//Note: this chunkhandle is already the new chunkHandle
@@ -385,11 +461,14 @@ public class ChunkServer implements ChunkServerInterface {
 			int firstSlotNum = getFirstSlotNumber(nextChunkHandle);
 			int recordLen = getRecordLength(nextChunkHandle, firstSlotNum);
 			
-			byte[] nextRec = readChunk(nextChunkHandle, 12, recordLen);
-			rec.setPayload(nextRec);
-			RID rid = new RID(nextChunkHandle, firstSlotNum, recordLen);
-			rec.setRID(rid);
-			return FSReturnVals.Success;
+			return ReadRecord(ofh, chunkHandle, 12, recordLen, firstSlotNum, rec, true);
+			
+			
+//			byte[] nextRec = readChunk(nextChunkHandle, 12, recordLen);
+//			rec.setPayload(nextRec);
+//			RID rid = new RID(nextChunkHandle, firstSlotNum, recordLen);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
 		}
 	}
 	
@@ -435,12 +514,15 @@ public class ChunkServer implements ChunkServerInterface {
 		//Case1: hasn't changed chunk, get prev slot
 		if(!changedChunk) {
 			int prevSlot = getPrevValidSlot(chunkHandle, currSlot);
-			int recordOffset = getOffsetFromSlot(chunkHandle, prevSlot);
-			int recordLen = getRecordLength(chunkHandle, prevSlot);
-			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
-			RID rid = new RID(chunkHandle, prevSlot, recordLen);
-			rec.setRID(rid);
-			return FSReturnVals.Success;
+			int prevRecordOffset = getOffsetFromSlot(chunkHandle, prevSlot);
+			int prevRecordLen = getRecordLength(chunkHandle, prevSlot);
+			
+			return ReadRecord(ofh, chunkHandle, prevRecordOffset, prevRecordLen, prevSlot, rec, false);
+			
+//			rec.setPayload(readChunk(chunkHandle, recordOffset, recordLen));
+//			RID rid = new RID(chunkHandle, prevSlot, recordLen);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
 		}
 		//Case2: changed chunk, read last record using last valid slot
 		//Note: this chunkhandle is already the new chunkHandle
@@ -449,15 +531,18 @@ public class ChunkServer implements ChunkServerInterface {
 			int lastSlotNum = getLastSlotNumber(prevChunkHandle);
 			int lastSlotOffset = getOffsetFromSlot(prevChunkHandle, lastSlotNum);
 			int recordLen = getRecordLength(prevChunkHandle, lastSlotNum);
-			rec.setPayload(readChunk(prevChunkHandle, lastSlotOffset, recordLen));
-			RID rid = new RID(prevChunkHandle, lastSlotNum, recordLen);
-			rec.setRID(rid);
-			return FSReturnVals.Success;
+			
+			return ReadRecord(ofh, chunkHandle, lastSlotOffset, recordLen, lastSlotNum, rec, false);
+			
+//			rec.setPayload(readChunk(prevChunkHandle, lastSlotOffset, recordLen));
+//			RID rid = new RID(prevChunkHandle, lastSlotNum, recordLen);
+//			rec.setRID(rid);
+//			return FSReturnVals.Success;
 		}
 	}
 	
 	
-	public byte[] ReadSubRecord(FileHandle ofh, byte[] listba, RID recordID){
+	public byte[] ReadSubRecord(FileHandle ofh, byte[] listba){
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
 		for(int i=4;i<listba.length;) {

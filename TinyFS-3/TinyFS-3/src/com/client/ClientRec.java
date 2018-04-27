@@ -11,6 +11,11 @@ public class ClientRec {
 	
 	ChunkServer cs;
 	ClientFS cfs;
+	
+	//Record types
+	private final int metaType = 0;
+	private final int subType = 1;
+	private final int normType = 2;
 
 	public ClientRec() {
 		cs = new ChunkServer(0);
@@ -29,22 +34,12 @@ public class ClientRec {
 	 */
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
 		//Case where payload is larger than max chunk size
-		int maxChunkSize = 4080;
+		int maxChunkSize = 4076;
 		if(payload.length>maxChunkSize) {
 			int startIndex = 0;
 			int endIndex = -1;
-
 			FileHandle tempfh = ofh;
-			String metaChunk = ofh.getLastChunk();
-			//metarecord
-			if(cs.getEmptySpace(ofh.getLastChunk())<0) {
-				tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
-				metaChunk = ofh.getLastChunk();
-			}
-			byte[] metaba = "meta".getBytes();
-			if(cs.AppendRecord(tempfh, metaba, RecordID) == FSReturnVals.Fail) {
-				RecordID = null;
-			}
+			ArrayList<Integer> subInfoList = new ArrayList<Integer>();
 			
 			while(true) {
 				endIndex = startIndex + maxChunkSize;
@@ -62,15 +57,18 @@ public class ClientRec {
 						}
 						return lastappfs;
 					}
-					return AppendRecord(tempfh, metaba, RecordID);
-//					return lastappfs;
+					
+					
+					
+					return lastappfs;
 				}
-//				if(prevChunkEmptySpace<maxChunkSize) {
+				if(prevChunkEmptySpace<maxChunkSize) {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
-//				}
+				}
 				
 				byte[] subPayload = Arrays.copyOfRange(payload, startIndex, endIndex);
 				FSReturnVals appfs = cs.AppendRecord(tempfh, subPayload, RecordID);
+				
 				if(appfs != FSReturnVals.Success) {
 					System.out.println("Appending subrecord still failed");
 					if(appfs == FSReturnVals.Fail) {
@@ -78,9 +76,18 @@ public class ClientRec {
 					}
 					return appfs;
 				}
+				
+				int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
+				subInfoList.add(intChunkHandle);
+				subInfoList.add(RecordID.getSlotNumber());
+				
 				startIndex = endIndex;
 			}
 		}
+		
+		
+		
+		
 		
 		FSReturnVals retVal = cs.AppendRecord(ofh, payload, RecordID);
 		if(retVal==FSReturnVals.Fail) {
