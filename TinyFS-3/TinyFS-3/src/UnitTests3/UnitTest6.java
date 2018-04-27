@@ -60,6 +60,15 @@ public class UnitTest6 {
 		FSReturnVals imgofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".img", ImageFH);
 		FSReturnVals nameofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".names", NameFH);
 		
+//		if(ImageFH==NameFH) {
+//			System.out.println("Fail1");
+//			return;
+//		}
+//		if(ImageFH.getName().equals(NameFH.getName())) {
+//			System.out.println("Fail2");
+//			return;
+//		}
+		
 		if( imgofd != FSReturnVals.Success ){
 			System.out.println("Unit test 6 result: fail!:"+imgofd);
     		return;
@@ -117,12 +126,24 @@ public class UnitTest6 {
 		//Open the image and name files
 		//Read the records and compare the payloads
 		imgofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".img", ImageFH);
+		System.out.println("1. File:"+ImageFH.getName());
 		nameofd = cfs.OpenFile("/" + dir1 + "/" + TinyFileName + ".names", NameFH);
+		System.out.println("2. File:"+ImageFH.getName());
 		byte[] imagePL = null, namePL = null;
 		TinyRec img1 = new TinyRec();
 		FSReturnVals retImg1 = crec.ReadFirstRecord(ImageFH, img1);
+		if (retImg1 != FSReturnVals.Success){
+			System.out.println("Error in UnitTest6: Failed in retImg1: "+retImg1);
+			return;
+		}
+		System.out.println("Img1 payload size: "+img1.getPayload().length+" at file:"+ImageFH.getName());
 		TinyRec name1 = new TinyRec();
 		FSReturnVals retName1 = crec.ReadFirstRecord(NameFH, name1);
+		if (retName1 != FSReturnVals.Success){
+			System.out.println("Error in UnitTest6: Failed in retName1: "+retName1);
+			return;
+		}
+		
 		if(img1.getRID() == null || name1.getRID() == null){
 			System.out.println("Error in UnitTest6:  Failed to read the first record");
 			return;
@@ -138,6 +159,7 @@ public class UnitTest6 {
 				}
 				img1 = img2;
 				TinyRec name2 = new TinyRec();
+				System.out.println("before 4th read");
 				FSReturnVals retval2 = crec.ReadNextRecord(NameFH, name1.getRID(), name2);
 				if(name2.getRID() == null){
 					System.out.println("Error in UnitTest6:  Failed to read the next record");

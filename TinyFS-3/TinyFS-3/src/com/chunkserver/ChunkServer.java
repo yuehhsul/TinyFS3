@@ -377,7 +377,7 @@ public class ChunkServer implements ChunkServerInterface {
 									int currRecordLen, int currSlot, TinyRec rec, boolean next) {
 		byte[] recba = readChunk(chunkHandle, currOffset, currRecordLen);
 		int recType = getRecordType(recba);
-//		System.out.println("Record is Type: "+recType);
+//		System.out.println("Record is Type: "+recType+"-----------------------");
 		RID rid = new RID(chunkHandle, currSlot, currRecordLen);
 		if(recType==metaType) {	//Meta record, read sub
 			byte[] completeRecord = ReadSubRecord(ofh, recba);
@@ -387,7 +387,9 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		else if(recType==subType) {	//Sub record, skip, find next/prev based on next
 			if(next) {
-				return ReadNextRecord(ofh,rid,rec);
+				FSReturnVals rnfs = ReadNextRecord(ofh,rid,rec);
+//				System.out.println("------at subtype readnext, got "+rnfs);
+				return rnfs;
 			}
 			return ReadPrevRecord(ofh,rid,rec);
 		}
@@ -571,6 +573,7 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	
 	public byte[] ReadSubRecord(FileHandle ofh, byte[] listba){
+		System.out.println("reading subrecords with length = "+listba.length);
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
 
 		for(int i=4;i<listba.length;) {
@@ -591,6 +594,8 @@ public class ChunkServer implements ChunkServerInterface {
 				e.printStackTrace();
 			}
 			i+=4;
+			
+			System.out.println("Sub in "+chunkHandle+" at "+slotNum);
 		}
 		
 		return outputStream.toByteArray();

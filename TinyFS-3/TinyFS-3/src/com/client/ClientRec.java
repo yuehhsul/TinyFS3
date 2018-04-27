@@ -48,10 +48,11 @@ public class ClientRec {
 			int endIndex = -1;
 			FileHandle tempfh = ofh;
 			ArrayList<Integer> subInfoList = new ArrayList<Integer>();
+
+			int prevChunkEmptySpace = cs.getEmptySpace(ofh.getLastChunk());
 			
 			while(true) {
 				endIndex = startIndex + maxChunkSize;
-				int prevChunkEmptySpace = cs.getEmptySpace(ofh.getLastChunk());
 				
 				if(endIndex>=payload.length) {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
@@ -70,7 +71,20 @@ public class ClientRec {
 					subInfoList.add(intChunkHandle);
 					subInfoList.add(RecordID.getSlotNumber());
 					
-					return lastappfs;
+					ByteBuffer metabb = ByteBuffer.allocate(subInfoList.size()*4);
+					for(int i=0;i<subInfoList.size();i++) {
+						metabb.putInt(subInfoList.get(i));
+					}
+					
+					byte[] metaRecordbb = prependType(metaType, metabb.array());
+					
+					FileHandle metafh = tempfh;
+					
+					if(cs.getEmptySpace(tempfh.getLastChunk())<metaRecordbb.length) {
+						metafh = cfs.createNewChunk(tempfh.getDir(), tempfh.getName());
+					}
+					
+					return cs.AppendRecord(metafh, metaRecordbb, RecordID);
 				}
 				if(prevChunkEmptySpace<maxChunkSize) {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
