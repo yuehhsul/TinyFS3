@@ -137,14 +137,14 @@ public class UnitTest6_1 {
 			return;
 		}
 		System.out.println("Img1 payload size: "+img1.getPayload().length+" at file:"+ImageFH.getName());
-		TinyRec name1 = new TinyRec();
+//		TinyRec name1 = new TinyRec();
 //		FSReturnVals retName1 = crec.ReadFirstRecord(NameFH, name1);
 //		if (retName1 != FSReturnVals.Success){
 //			System.out.println("Error in UnitTest6: Failed in retName1: "+retName1);
 //			return;
 //		}
 //		
-		if(img1.getRID() == null || name1.getRID() == null){
+		if(img1.getRID() == null){
 			System.out.println("Error in UnitTest6:  Failed to read the first record");
 			return;
 		}
@@ -153,26 +153,26 @@ public class UnitTest6_1 {
 			if(i != 0){
 				TinyRec img2 = new TinyRec();
 				FSReturnVals retval1 = crec.ReadNextRecord(ImageFH, img1.getRID(), img2);
-				if(img2.getRID() == null){
-					System.out.println("Error in UnitTest6:  Failed to read the next record");
-					return;
-				}
+//				if(img2.getRID() == null){
+//					System.out.println("Error in UnitTest6:  Failed to read the next record");
+//					return;
+//				}
 				img1 = img2;
-				TinyRec name2 = new TinyRec();
+//				TinyRec name2 = new TinyRec();
 //				System.out.println("before 4th read");
 ////				FSReturnVals retval2 = crec.ReadNextRecord(NameFH, name1.getRID(), name2);
 //				if(name2.getRID() == null){
 //					System.out.println("Error in UnitTest6:  Failed to read the next record");
 //					return;
 //				}
-				name1 = name2;
+//				name1 = name2;
 			}
 			byte[] indexBytes = ByteBuffer.allocate(intSize).putInt(i).array();
 			long size = 0;
 			byte[] contentBytes = getBytesFromFile(new File("SuperHeros/" + filename + ".jpg"), size);
 			byte[] sizeBytes = ByteBuffer.allocate(intSize).putInt((int)size).array();
 			imagePL = img1.getPayload();
-			System.out.println("image payload length = "+imagePL.length);
+			System.out.println("image payload length = "+imagePL.length+" and contentSize="+contentBytes.length);
 			for(int j = 0; j < imagePL.length; j++){
 				if(j < 4){
 					if(imagePL[j] != indexBytes[j]){
@@ -195,7 +195,7 @@ public class UnitTest6_1 {
 			contentBytes = filename.getBytes();
 			size = sizeBytes.length;
 			sizeBytes = ByteBuffer.allocate(intSize).putInt(sizeBytes.length).array();
-			namePL = name1.getPayload();
+//			namePL = name1.getPayload();
 			for(int j = 0; j < namePL.length; j++){
 				if(j < 4){
 					if(namePL[j] != indexBytes[j]){

@@ -48,7 +48,8 @@ public class Master {
 		fileNSMap.put("/", new ArrayList<String>());
 		fileHandleMap = new HashMap<String, ArrayList<String>>();
 		chunkAddrMap = new HashMap<String, String>();
-		cs = new ChunkServer(chunkServerID);
+//		cs = new ChunkServer(chunkServerID);
+		cs = new ChunkServer();
 		this.logRecover();
 	}
 	

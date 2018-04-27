@@ -18,7 +18,7 @@ public class ClientRec {
 	private final int normType = 22;
 
 	public ClientRec() {
-		cs = new ChunkServer(0);
+		cs = new ChunkServer();
 	}
 	
 	public void init(ClientFS clientFS) {
@@ -42,7 +42,7 @@ public class ClientRec {
 	 */
 	public FSReturnVals AppendRecord(FileHandle ofh, byte[] payload, RID RecordID) {
 		//Case where payload is larger than max chunk size
-		int maxChunkSize = 4076;
+		int maxChunkSize = 4076; //4076
 		if(payload.length>maxChunkSize) {
 			int startIndex = 0;
 			int endIndex = -1;
@@ -69,7 +69,7 @@ public class ClientRec {
 					
 					int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
 					subInfoList.add(intChunkHandle);
-					subInfoList.add(RecordID.getSlotNumber());
+					subInfoList.add(0);
 					
 					ByteBuffer metabb = ByteBuffer.allocate(subInfoList.size()*4);
 					for(int i=0;i<subInfoList.size();i++) {
@@ -79,9 +79,10 @@ public class ClientRec {
 					byte[] metaRecordbb = prependType(metaType, metabb.array());
 					
 					FileHandle metafh = tempfh;
-					
+//					int metaSlot = 1;
 					if(cs.getEmptySpace(tempfh.getLastChunk())<metaRecordbb.length) {
 						metafh = cfs.createNewChunk(tempfh.getDir(), tempfh.getName());
+//						metaSlot = 0;
 					}
 					
 					return cs.AppendRecord(metafh, metaRecordbb, RecordID);
@@ -103,7 +104,12 @@ public class ClientRec {
 				
 				int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
 				subInfoList.add(intChunkHandle);
-				subInfoList.add(RecordID.getSlotNumber());
+				subInfoList.add(0);
+				
+//				if(RecordID.getSlotNumber()==-1) {
+//					System.out.println("CHunk:"+RecordID.getChunkHandle());
+//					while(true) {}
+//				}
 				
 				startIndex = endIndex;
 			}

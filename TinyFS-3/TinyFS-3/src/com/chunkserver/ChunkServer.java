@@ -61,8 +61,8 @@ public class ChunkServer implements ChunkServerInterface {
 	/**
 	 * Initialize the chunk server
 	 */
-	public ChunkServer(int id){
-		this.csid = id;
+	public ChunkServer(){
+//		this.csid = id;
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles();
 
@@ -84,7 +84,8 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String createChunk() {
 		counter += 1;
-		String chunkHandle = String.valueOf(this.csid)+String.valueOf(counter);
+//		String chunkHandle = String.valueOf(this.csid)+String.valueOf(counter);
+		String chunkHandle = String.valueOf(counter);
 		initializeChunk(chunkHandle);
 		return chunkHandle;
 	}
@@ -581,12 +582,15 @@ public class ChunkServer implements ChunkServerInterface {
 			byte[] chunkba = Arrays.copyOfRange(listba, i, i+4);
 			ByteBuffer chunkbb = ByteBuffer.wrap(chunkba);
 			String chunkHandle = String.valueOf(chunkbb.getInt());
+			System.out.println("chunkHandle ----- is "+chunkHandle);
 			i+=4;
 			
 			//get slotnumber
 			byte[] slotba = Arrays.copyOfRange(listba, i, i+4);
 			ByteBuffer slotbb = ByteBuffer.wrap(slotba);
 			int slotNum = slotbb.getInt();
+			
+			System.out.println("before fail: slotnum="+slotNum);
 			
 			try {
 				outputStream.write(getRecord(chunkHandle, slotNum));
@@ -853,7 +857,7 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	public static void ReadAndProcessRequests()
 	{
-		ChunkServer cs = new ChunkServer(0);
+		ChunkServer cs = new ChunkServer();
 		
 		//Used for communication with the Client via the network
 		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
