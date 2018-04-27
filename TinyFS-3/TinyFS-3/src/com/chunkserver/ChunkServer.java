@@ -65,11 +65,14 @@ public class ChunkServer implements ChunkServerInterface {
 		this.csid = id;
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles();
-
+		
 		if(fs.length == 0){
 			counter = 0;
 		}else{
 			long[] cntrs = new long[fs.length];
+			for(int i =0; i<  cntrs.length; i++) {
+				System.out.println(fs[i].getName());
+			}
 			for (int j=0; j < cntrs.length; j++)
 				cntrs[j] = Long.valueOf( fs[j].getName() ); 
 			
