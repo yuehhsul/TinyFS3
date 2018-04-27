@@ -40,6 +40,7 @@ public class Master {
 	private static Master master;
 	
 	private int chunkServerID;
+	private final int normType = 22;
 	
 	public Master() {
 		chunkServerID = 0;
@@ -49,6 +50,13 @@ public class Master {
 		chunkAddrMap = new HashMap<String, String>();
 		cs = new ChunkServer(chunkServerID);
 		this.logRecover();
+	}
+	
+	private byte[] prependType(int type, byte[] payload) {
+		ByteBuffer bb = ByteBuffer.allocate(4+payload.length);
+		bb.putInt(type);
+		bb.put(payload);
+		return bb.array();
 	}
 
 	/**
@@ -98,16 +106,16 @@ public class Master {
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createDirCMD);
 //						System.out.println("fh name is "+fh.getName());
-						cs.AppendRecord(logfh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, prependType(normType, bb.array()), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = srcDirectory.getBytes();
-						cs.AppendRecord(logfh, srcBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, srcBA), RecordID);
 						break;
 					case 2:
 						System.out.println("Reached:"+i);
 						byte[] nameBA = dirname.getBytes();
-						cs.AppendRecord(logfh, nameBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, nameBA), RecordID);
 						break;
 					default:
 						break;
@@ -159,15 +167,15 @@ public class Master {
 						case 0:	//append commanddtype
 							ByteBuffer bb = ByteBuffer.allocate(4);
 							bb.putInt(deleteDirCMD);
-							cs.AppendRecord(logfh, bb.array(), RecordID);
+							cs.AppendRecord(logfh, prependType(normType, bb.array()), RecordID);
 							break;
 						case 1:	//append argOne
 							byte[] srcBA = srcDir.getBytes();
-							cs.AppendRecord(logfh, srcBA, RecordID);
+							cs.AppendRecord(logfh, prependType(normType, srcBA), RecordID);
 							break;
 						case 2:
 							byte[] nameBA = dirname.getBytes();
-							cs.AppendRecord(logfh, nameBA, RecordID);
+							cs.AppendRecord(logfh, prependType(normType, nameBA), RecordID);
 							break;
 						default:
 							break;
@@ -249,15 +257,15 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(renameDirCMD);
-						cs.AppendRecord(logfh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, prependType(normType, bb.array()), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = src.getBytes();
-						cs.AppendRecord(logfh, srcBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, srcBA), RecordID);
 						break;
 					case 2:
 						byte[] nameBA = NewName.getBytes();
-						cs.AppendRecord(logfh, nameBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, nameBA), RecordID);
 						break;
 					default:
 						break;
@@ -363,15 +371,15 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(createFileCMD);
-						cs.AppendRecord(logfh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, prependType(normType, bb.array()), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = dir.getBytes();
-						cs.AppendRecord(logfh, srcBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, srcBA), RecordID);
 						break;
 					case 2:
 						byte[] nameBA = filename.getBytes();
-						cs.AppendRecord(logfh, nameBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, nameBA), RecordID);
 						break;
 					default:
 						break;
@@ -485,15 +493,15 @@ public class Master {
 					case 0:	//append commanddtype
 						ByteBuffer bb = ByteBuffer.allocate(4);
 						bb.putInt(deleteFileCMD);
-						cs.AppendRecord(logfh, bb.array(), RecordID);
+						cs.AppendRecord(logfh, prependType(normType, bb.array()), RecordID);
 						break;
 					case 1:	//append argOne
 						byte[] srcBA = tgtdir.getBytes();
-						cs.AppendRecord(logfh, srcBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, srcBA), RecordID);
 						break;
 					case 2:
 						byte[] nameBA = filename.getBytes();
-						cs.AppendRecord(logfh, nameBA, RecordID);
+						cs.AppendRecord(logfh, prependType(normType, nameBA), RecordID);
 						break;
 					default:
 						break;

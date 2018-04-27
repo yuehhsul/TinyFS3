@@ -13,9 +13,9 @@ public class ClientRec {
 	ClientFS cfs;
 	
 	//Record types
-	private final int metaType = 0;
-	private final int subType = 1;
-	private final int normType = 2;
+	private final int metaType = 20;
+	private final int subType = 21;
+	private final int normType = 22;
 
 	public ClientRec() {
 		cs = new ChunkServer(0);
@@ -24,6 +24,14 @@ public class ClientRec {
 	public void init(ClientFS clientFS) {
 		cfs = clientFS;
 	}
+	
+	private byte[] prependType(int type, byte[] payload) {
+		ByteBuffer bb = ByteBuffer.allocate(4+payload.length);
+		bb.putInt(type);
+		bb.put(payload);
+		return bb.array();
+	}
+	
 	/**
 	 * Appends a record to the open file as specified by ofh Returns BadHandle
 	 * if ofh is invalid Returns BadRecID if the specified RID is not null
@@ -49,7 +57,7 @@ public class ClientRec {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 					System.out.println("Appending last subrecord!------------------------size ="+String.valueOf(payload.length-startIndex));
 					byte[] subPayload = Arrays.copyOfRange(payload, startIndex, payload.length);
-					FSReturnVals lastappfs = cs.AppendRecord(tempfh, subPayload, RecordID);
+					FSReturnVals lastappfs = cs.AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 					if(lastappfs != FSReturnVals.Success) {
 						System.out.println("Appending last subrecord still failed");
 						if(lastappfs == FSReturnVals.Fail) {
@@ -58,7 +66,9 @@ public class ClientRec {
 						return lastappfs;
 					}
 					
-					
+					int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
+					subInfoList.add(intChunkHandle);
+					subInfoList.add(RecordID.getSlotNumber());
 					
 					return lastappfs;
 				}
@@ -67,7 +77,7 @@ public class ClientRec {
 				}
 				
 				byte[] subPayload = Arrays.copyOfRange(payload, startIndex, endIndex);
-				FSReturnVals appfs = cs.AppendRecord(tempfh, subPayload, RecordID);
+				FSReturnVals appfs = cs.AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 				
 				if(appfs != FSReturnVals.Success) {
 					System.out.println("Appending subrecord still failed");
@@ -89,7 +99,7 @@ public class ClientRec {
 		
 		
 		
-		FSReturnVals retVal = cs.AppendRecord(ofh, payload, RecordID);
+		FSReturnVals retVal = cs.AppendRecord(ofh, prependType(normType, payload), RecordID);
 		if(retVal==FSReturnVals.Fail) {
 			RecordID = null;
 			return FSReturnVals.Fail;

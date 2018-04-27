@@ -69,6 +69,7 @@ public class UnitTest5 {
 		int cntr = 1;
 		ArrayList<RID> vect = new ArrayList<RID>();
 		while (r1.getRID() != null){
+			System.out.println("--------");
 			TinyRec r2 = new TinyRec();
 			FSReturnVals retval = crec.ReadPrevRecord(fh, r1.getRID(), r2);
 			if(r2.getRID() != null){
