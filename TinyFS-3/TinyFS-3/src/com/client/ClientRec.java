@@ -53,7 +53,7 @@ public class ClientRec {
 			FileHandle tempfh = ofh;
 			ArrayList<Integer> subInfoList = new ArrayList<Integer>();
 
-			int prevChunkEmptySpace = cs.getEmptySpace(ofh.getLastChunk());
+			int prevChunkEmptySpace = chunkServers.get(0).getEmptySpace(ofh.getLastChunk());
 			
 			while(true) {
 				endIndex = startIndex + maxChunkSize;
@@ -62,13 +62,18 @@ public class ClientRec {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 					System.out.println("Appending last subrecord!------------------------size ="+String.valueOf(payload.length-startIndex));
 					byte[] subPayload = Arrays.copyOfRange(payload, startIndex, payload.length);
-					FSReturnVals lastappfs = cs.AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
+					FSReturnVals lastappfs = chunkServers.get(0).AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 					if(lastappfs != FSReturnVals.Success) {
 						System.out.println("Appending last subrecord still failed");
 						if(lastappfs == FSReturnVals.Fail) {
 							RecordID = null;
 						}
 						return lastappfs;
+					}
+					//tell replicas to append subrecord
+					
+					for(int i=1; i < 4; i++) {
+						chunkServers.get(i).AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 					}
 					
 					int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
@@ -84,19 +89,24 @@ public class ClientRec {
 					
 					FileHandle metafh = tempfh;
 //					int metaSlot = 1;
-					if(cs.getEmptySpace(tempfh.getLastChunk())<metaRecordbb.length) {
+					if(chunkServers.get(0).getEmptySpace(tempfh.getLastChunk())<metaRecordbb.length) {
 						metafh = cfs.createNewChunk(tempfh.getDir(), tempfh.getName());
 //						metaSlot = 0;
 					}
 					
-					return cs.AppendRecord(metafh, metaRecordbb, RecordID);
+					if(chunkServers.get(0).AppendRecord(metafh, metaRecordbb, RecordID) != FSReturnVals.Success) {
+						return chunkServers.get(0).AppendRecord(metafh, metaRecordbb, RecordID);
+					}
+					//adding metaFh was successful, tell replicas to do the same
+					
+					return chunkServers.get(0).AppendRecord(metafh, metaRecordbb, RecordID);
 				}
 				if(prevChunkEmptySpace<maxChunkSize) {
 					tempfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 				}
 				
 				byte[] subPayload = Arrays.copyOfRange(payload, startIndex, endIndex);
-				FSReturnVals appfs = cs.AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
+				FSReturnVals appfs = chunkServers.get(0).AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 				
 				if(appfs != FSReturnVals.Success) {
 					System.out.println("Appending subrecord still failed");
@@ -104,6 +114,10 @@ public class ClientRec {
 						RecordID = null;
 					}
 					return appfs;
+				}
+				//subRec was added, now add to replicas
+				for(int i = 1; i < 4; i++) {
+					chunkServers.get(i).AppendRecord(tempfh, prependType(subType, subPayload), RecordID);
 				}
 				
 				int intChunkHandle = Integer.parseInt(tempfh.getLastChunk());
@@ -123,7 +137,7 @@ public class ClientRec {
 		
 		
 		
-		FSReturnVals retVal = cs.AppendRecord(ofh, prependType(normType, payload), RecordID);
+		FSReturnVals retVal = chunkServers.get(0).AppendRecord(ofh, prependType(normType, payload), RecordID);
 		if(retVal==FSReturnVals.Fail) {
 			RecordID = null;
 			return FSReturnVals.Fail;
@@ -133,6 +147,12 @@ public class ClientRec {
 			System.out.println("ofhgetdir = "+ofh.getDir());
 			FileHandle newfh = cfs.createNewChunk(ofh.getDir(), ofh.getName());
 			return AppendRecord(newfh, payload, RecordID);
+		}
+		
+		else if(retVal == FSReturnVals.Success) {
+			for(int i = 1; i < 4; i++) {
+				chunkServers.get(i).updateReplicas(ofh);
+			}
 		}
 		return retVal;
 	}
@@ -146,9 +166,11 @@ public class ClientRec {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
+		FileHandle handle = ofh;
+		FSReturnVals status = chunkServers.get(0).DeleteRecord(handle, RecordID);
 		for(int i = 1; i < chunkServers.size(); i++)
-			chunkServers.get(i).DeleteRecord(ofh, RecordID);
-		return chunkServers.get(0).DeleteRecord(ofh, RecordID);
+			chunkServers.get(i).updateReplicas(handle);
+		return status;
 	}
 
 	/**
@@ -204,3 +226,4 @@ public class ClientRec {
 	}
 
 }
+
