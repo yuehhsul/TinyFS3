@@ -9,7 +9,7 @@ import com.client.ClientFS.FSReturnVals;
 
 public class ClientRec {
 	
-	ChunkServer cs;
+	ArrayList<ChunkServer> chunkServers;
 	ClientFS cfs;
 	
 	//Record types
@@ -18,7 +18,11 @@ public class ClientRec {
 	private final int normType = 22;
 
 	public ClientRec() {
-		cs = new ChunkServer();
+		chunkServers = new ArrayList<ChunkServer>();
+		for(int i = 0; i < 4; i++) {
+			ChunkServer cs = new ChunkServer();
+			chunkServers.add(cs);
+		}
 	}
 	
 	public void init(ClientFS clientFS) {
@@ -142,7 +146,9 @@ public class ClientRec {
 	 * Example usage: DeleteRecord(FH1, RecID1)
 	 */
 	public FSReturnVals DeleteRecord(FileHandle ofh, RID RecordID) {
-		return cs.DeleteRecord(ofh, RecordID);
+		for(int i = 1; i < chunkServers.size(); i++)
+			chunkServers.get(i).DeleteRecord(ofh, RecordID);
+		return chunkServers.get(0).DeleteRecord(ofh, RecordID);
 	}
 
 	/**
@@ -152,7 +158,9 @@ public class ClientRec {
 	 * Example usage: ReadFirstRecord(FH1, tinyRec)
 	 */
 	public FSReturnVals ReadFirstRecord(FileHandle ofh, TinyRec rec){
-		return cs.ReadFirstRecord(ofh, rec);
+		for(int i = 1; i < chunkServers.size(); i++)
+			chunkServers.get(i).ReadFirstRecord(ofh, rec);
+		return chunkServers.get(0).ReadFirstRecord(ofh, rec);
 	}
 
 	/**
@@ -162,7 +170,9 @@ public class ClientRec {
 	 * Example usage: ReadLastRecord(FH1, tinyRec)
 	 */
 	public FSReturnVals ReadLastRecord(FileHandle ofh, TinyRec rec){
-		return cs.ReadLastRecord(ofh, rec);
+		for(int i = 1; i < chunkServers.size(); i++)
+			chunkServers.get(i).ReadLastRecord(ofh, rec);
+		return chunkServers.get(0).ReadLastRecord(ofh, rec);
 	}
 
 	/**
@@ -174,7 +184,9 @@ public class ClientRec {
 	 * rec1, tinyRec2) 3. ReadNextRecord(FH1, rec2, tinyRec3)
 	 */
 	public FSReturnVals ReadNextRecord(FileHandle ofh, RID pivot, TinyRec rec){
-		return cs.ReadNextRecord(ofh, pivot, rec);
+		for(int i = 1; i < chunkServers.size(); i++)
+			chunkServers.get(i).ReadNextRecord(ofh, pivot, rec);
+		return chunkServers.get(0).ReadNextRecord(ofh, pivot, rec);
 	}
 
 	/**
@@ -186,7 +198,9 @@ public class ClientRec {
 	 * recn-1, tinyRec2) 3. ReadPrevRecord(FH1, recn-2, tinyRec3)
 	 */
 	public FSReturnVals ReadPrevRecord(FileHandle ofh, RID pivot, TinyRec rec){
-		return cs.ReadPrevRecord(ofh, pivot, rec);
+		for(int i = 1; i < chunkServers.size(); i++)
+			chunkServers.get(i).ReadPrevRecord(ofh, pivot, rec);
+		return chunkServers.get(0).ReadPrevRecord(ofh, pivot, rec);
 	}
 
 }
