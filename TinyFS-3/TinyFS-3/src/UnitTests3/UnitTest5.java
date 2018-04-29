@@ -25,6 +25,7 @@ public class UnitTest5 {
 		System.out.println(TestName + "Same as Unit Test 4 except that it manipulates the records starting with the last record, going backwards, and delete the even numbered records using their first four bytes.");
 		String dir1 = "Shahram";
 		ClientFS cfs = new ClientFS();
+		System.out.println("/" + dir1+ " line 28");
 		FSReturnVals fsrv = cfs.CreateDir("/", dir1);
 		if ( fsrv != FSReturnVals.Success ){
 			System.out.println("Unit test 5 result: fail!");
